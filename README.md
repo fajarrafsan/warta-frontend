@@ -45,6 +45,22 @@ VITE_API_URL=https://alamat-backend.example.com
 
 Jika frontend dan backend berada pada origin berbeda di production, backend harus mengizinkan origin frontend melalui konfigurasi CORS.
 
+## Deploy
+
+Frontend ini dideploy ke Vercel sebagai etalase tampilan. Backend-nya tidak ikut
+dideploy karena dijalankan lokal, jadi pada versi Vercel indikator koneksi
+menampilkan "Backend terputus" dan daftar article kosong. Itu bukan kerusakan
+aplikasi, melainkan memang tidak ada backend yang bisa dihubungi dari internet.
+
+Untuk melihat aplikasinya bekerja penuh, jalankan backend dan frontend di lokal
+seperti pada bagian Menjalankan project di atas.
+
+`vercel.json` berisi rewrite ke `index.html` supaya route seperti `/posts/new`
+tetap terbuka saat diakses langsung, bukan menghasilkan 404.
+
+Kalau nanti backend sudah punya URL publik, isi `VITE_API_URL` pada Environment
+Variables di Vercel lalu redeploy, dan tambahkan CORS di sisi backend.
+
 ## Scripts
 
 ```bash
