@@ -1,0 +1,23 @@
+@layer utilities {
+  .editorial-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--border-color) 48%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--border-color) 48%, transparent) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .focus-ring {
+    outline: none;
+  }
+
+  .focus-ring:focus-visible {
+    box-shadow:
+      0 0 0 2px var(--bg-secondary),
+      0 0 0 4px var(--accent-strong);
+  }
+
+  .balanced-text {
+    text-wrap: balance;
+  }
+}
+

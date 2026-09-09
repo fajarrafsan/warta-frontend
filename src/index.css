@@ -1,0 +1,7 @@
+@import './styles/01-tailwind.css';
+@import './styles/02-variables.css';
+@import './styles/03-base.css';
+@import './styles/04-animations.css';
+@import './styles/05-utilities.css';
+@import './styles/06-reduced-motion.css';
+

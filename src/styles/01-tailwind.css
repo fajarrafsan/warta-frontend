@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --font-sans: 'Roboto Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Newsreader Variable', Georgia, serif;
+
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-soft: var(--bg-soft);
+  --color-bg-hover: var(--bg-hover);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-border: var(--border-color);
+  --color-brand: var(--brand-color);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-accent: var(--accent-color);
+  --color-accent-strong: var(--accent-strong);
+  --color-danger: var(--danger-color);
+  --color-success: var(--success-color);
+
+  --shadow-soft: var(--app-shadow-soft);
+  --shadow-card: var(--app-shadow-card);
+  --shadow-float: var(--app-shadow-float);
+}
