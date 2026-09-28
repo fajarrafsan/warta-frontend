@@ -1,6 +1,6 @@
 # Warta Frontend
 
-Frontend untuk [Warta](https://github.com/fajarrafsan/sharing-vision-backend):
+Frontend untuk [Warta](https://github.com/fajarrafsan/warta-backend):
 ruang redaksi untuk penulis dan admin, sekaligus halaman baca untuk publik.
 React JSX, Vite, Tailwind CSS v4, dan pnpm.
 
@@ -27,7 +27,7 @@ Preview, penulis mendapat All Posts dan Add New, admin mendapat semuanya.
 Jalankan backend Warta lebih dulu di `http://localhost:8080`:
 
 ```bash
-cd sharing-vision-backend
+cd warta-backend
 docker compose up -d --build
 ```
 
