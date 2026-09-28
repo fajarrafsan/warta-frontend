@@ -1,7 +1,7 @@
 import { CircleCheck, FileClock, Trash2 } from 'lucide-react'
 
 const variants = {
-  publish: {
+  published: {
     label: 'Published',
     icon: CircleCheck,
     className: 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300',
@@ -11,7 +11,7 @@ const variants = {
     icon: FileClock,
     className: 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300',
   },
-  thrash: {
+  archived: {
     label: 'Trashed',
     icon: Trash2,
     className: 'border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300',
@@ -29,4 +29,3 @@ export default function StatusBadge({ status }) {
     </span>
   )
 }
-

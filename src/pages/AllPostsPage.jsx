@@ -2,70 +2,85 @@ import { useDeferredValue, useMemo, useState } from 'react'
 import { FileClock, FilePlus2, Search, Trash2, CheckCircle2 } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { deleteArticle, toArticlePayload, updateArticle } from '../api/articleApi.js'
+import { changeArticleStatus, deleteArticle, listArticles } from '../api/articleApi.js'
 import ArticleList, { ArticleListSkeleton } from '../components/articles/ArticleList.jsx'
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx'
 import ErrorState from '../components/ui/ErrorState.jsx'
 import PageHeader from '../components/ui/PageHeader.jsx'
+import Pagination from '../components/ui/Pagination.jsx'
 import useArticles from '../hooks/useArticles.js'
+import useAsync from '../hooks/useAsync.js'
+import useAuth from '../hooks/useAuth.js'
 import useDocumentTitle from '../hooks/useDocumentTitle.js'
-import { ARTICLE_STATUS, sortByUpdatedDate, STATUS_TABS } from '../utils/articleUtils.js'
+import { ARTICLE_STATUS, STATUS_TABS } from '../utils/articleUtils.js'
+
+const PAGE_SIZE = 10
 
 const statusIcons = {
-  publish: CheckCircle2,
+  published: CheckCircle2,
   draft: FileClock,
-  thrash: Trash2,
+  archived: Trash2,
+}
+
+// Admin melihat artikel semua penulis; author hanya artikelnya sendiri.
+function fetchCounts(mine) {
+  return Promise.all(
+    STATUS_TABS.map((tab) => listArticles({ status: tab.key, perPage: 1 }, { mine })),
+  ).then((results) => Object.fromEntries(
+    STATUS_TABS.map((tab, index) => [tab.key, results[index].meta.total]),
+  ))
 }
 
 export default function AllPostsPage() {
   useDocumentTitle('All Posts')
 
+  const { isAdmin } = useAuth()
+  const mine = !isAdmin
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState('')
   const [busyId, setBusyId] = useState(null)
   const [pendingDelete, setPendingDelete] = useState(null)
-  const { articles, loading, refreshing, error, refresh } = useArticles()
-  const deferredSearch = useDeferredValue(search)
+  const deferredSearch = useDeferredValue(search.trim())
 
   const requestedStatus = searchParams.get('status')
   const activeStatus = STATUS_TABS.some((tab) => tab.key === requestedStatus)
     ? requestedStatus
-    : ARTICLE_STATUS.PUBLISH
+    : ARTICLE_STATUS.PUBLISHED
+  const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1', 10) || 1)
 
-  const counts = useMemo(() => {
-    return STATUS_TABS.reduce((result, tab) => {
-      result[tab.key] = articles.filter((article) => article.status === tab.key).length
-      return result
-    }, {})
-  }, [articles])
+  const params = useMemo(() => ({
+    status: activeStatus,
+    q: deferredSearch,
+    sort: 'updated',
+    page,
+    perPage: PAGE_SIZE,
+  }), [activeStatus, deferredSearch, page])
 
-  const visibleArticles = useMemo(() => {
-    const keyword = deferredSearch.trim().toLowerCase()
+  const { articles, meta, loading, refreshing, error, refresh } = useArticles(params, { mine })
+  const counts = useAsync(() => fetchCounts(mine), [mine])
 
-    return sortByUpdatedDate(
-      articles.filter((article) => {
-        const matchesStatus = article.status === activeStatus
-        const matchesSearch = !keyword
-          || article.title.toLowerCase().includes(keyword)
-          || article.category.toLowerCase().includes(keyword)
+  function refreshAll() {
+    refresh()
+    counts.refresh()
+  }
 
-        return matchesStatus && matchesSearch
-      }),
-    )
-  }, [activeStatus, articles, deferredSearch])
-
-  function changeStatus(status) {
+  function updateParams(changes) {
     const nextParams = new URLSearchParams(searchParams)
-    nextParams.set('status', status)
+    Object.entries(changes).forEach(([key, value]) => nextParams.set(key, String(value)))
     setSearchParams(nextParams)
   }
 
-  async function changeArticleStatus(article, nextStatus, successMessage = '') {
+  function changeSearch(value) {
+    setSearch(value)
+    if (page !== 1) updateParams({ page: 1 })
+  }
+
+  async function setStatus(article, nextStatus, successMessage = '') {
     setBusyId(article.id)
 
     try {
-      await updateArticle(article.id, toArticlePayload(article, nextStatus))
-      await refresh({ silent: true })
+      await changeArticleStatus(article.id, nextStatus)
+      refreshAll()
       if (successMessage) toast.success(successMessage)
     } catch (mutationError) {
       toast.error(mutationError.message || 'Status artikel belum dapat diubah.')
@@ -77,29 +92,29 @@ export default function AllPostsPage() {
 
   async function moveToTrash(article) {
     try {
-      await changeArticleStatus(article, ARTICLE_STATUS.THRASH)
+      await setStatus(article, ARTICLE_STATUS.ARCHIVED)
       toast.success('Artikel dipindahkan ke Trashed.', {
         action: {
           label: 'Batalkan',
           onClick: async () => {
             try {
-              await changeArticleStatus(article, article.status, 'Artikel berhasil dipulihkan.')
+              await setStatus(article, article.status, 'Artikel berhasil dipulihkan.')
             } catch {
-              // Error sudah ditampilkan oleh changeArticleStatus.
+              // Error sudah ditampilkan oleh setStatus.
             }
           },
         },
       })
     } catch {
-      // Error sudah ditampilkan oleh changeArticleStatus.
+      // Error sudah ditampilkan oleh setStatus.
     }
   }
 
   async function restoreArticle(article) {
     try {
-      await changeArticleStatus(article, ARTICLE_STATUS.DRAFT, 'Artikel dipulihkan sebagai Draft.')
+      await setStatus(article, ARTICLE_STATUS.DRAFT, 'Artikel dipulihkan sebagai Draft.')
     } catch {
-      // Error sudah ditampilkan oleh changeArticleStatus.
+      // Error sudah ditampilkan oleh setStatus.
     }
   }
 
@@ -111,7 +126,7 @@ export default function AllPostsPage() {
 
     try {
       await deleteArticle(pendingDelete.id)
-      await refresh({ silent: true })
+      refreshAll()
       toast.success('Artikel dihapus permanen.')
       setPendingDelete(null)
     } catch (mutationError) {
@@ -121,12 +136,16 @@ export default function AllPostsPage() {
     }
   }
 
+  const countOf = (status) => counts.data?.[status] ?? 0
+
   return (
     <div className="animate-fade-up space-y-7">
       <PageHeader
         eyebrow="Dashboard"
         title="All Posts"
-        description="Kelola artikel published, draft, dan trashed dari satu tempat."
+        description={isAdmin
+          ? 'Kelola artikel semua penulis: published, draft, dan trashed.'
+          : 'Kelola artikel milikmu: published, draft, dan trashed.'}
       >
         <Link
           to="/posts/new"
@@ -145,7 +164,7 @@ export default function AllPostsPage() {
             <button
               type="button"
               key={tab.key}
-              onClick={() => changeStatus(tab.key)}
+              onClick={() => updateParams({ status: tab.key, page: 1 })}
               className={`focus-ring flex min-h-24 cursor-pointer items-center justify-between rounded-2xl border p-4 text-left transition duration-200 ${
                 activeStatus === tab.key
                   ? 'border-text-primary bg-bg-secondary shadow-card'
@@ -155,7 +174,7 @@ export default function AllPostsPage() {
             >
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-text-tertiary">{tab.label}</p>
-                <p className="mt-2 text-2xl font-bold tabular-nums text-text-primary">{counts[tab.key] || 0}</p>
+                <p className="mt-2 text-2xl font-bold tabular-nums text-text-primary">{countOf(tab.key)}</p>
               </div>
               <span className={`grid size-11 place-items-center rounded-xl ${activeStatus === tab.key ? 'bg-brand text-brand-contrast' : 'bg-bg-soft text-text-secondary'}`}>
                 <Icon aria-hidden="true" size={20} />
@@ -174,7 +193,7 @@ export default function AllPostsPage() {
                 role="tab"
                 key={tab.key}
                 aria-selected={activeStatus === tab.key}
-                onClick={() => changeStatus(tab.key)}
+                onClick={() => updateParams({ status: tab.key, page: 1 })}
                 className={`focus-ring relative min-h-11 shrink-0 cursor-pointer rounded-lg px-4 text-sm font-semibold transition-colors duration-200 ${
                   activeStatus === tab.key
                     ? 'bg-brand text-brand-contrast'
@@ -182,18 +201,18 @@ export default function AllPostsPage() {
                 }`}
               >
                 {tab.label}
-                <span className="ml-2 tabular-nums opacity-70">{counts[tab.key] || 0}</span>
+                <span className="ml-2 tabular-nums opacity-70">{countOf(tab.key)}</span>
               </button>
             ))}
           </div>
 
           <label className="relative block w-full sm:max-w-xs">
-            <span className="sr-only">Cari berdasarkan title atau category</span>
+            <span className="sr-only">Cari di judul atau isi artikel</span>
             <Search aria-hidden="true" size={17} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
             <input
               type="search"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => changeSearch(event.target.value)}
               className="focus-ring min-h-11 w-full rounded-xl border border-border bg-bg-primary py-2 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-tertiary"
               placeholder="Cari artikel..."
             />
@@ -209,15 +228,26 @@ export default function AllPostsPage() {
         {loading ? (
           <ArticleListSkeleton />
         ) : error ? (
-          <div className="p-5"><ErrorState error={error} onRetry={refresh} /></div>
+          <div className="p-5"><ErrorState error={error} onRetry={refreshAll} /></div>
         ) : (
           <ArticleList
-            articles={visibleArticles}
+            articles={articles}
             busyId={busyId}
+            showAuthor={isAdmin}
             onTrash={moveToTrash}
             onRestore={restoreArticle}
             onDelete={setPendingDelete}
           />
+        )}
+
+        {meta.total_pages > 1 && (
+          <div className="border-t border-border p-4">
+            <Pagination
+              currentPage={Math.min(page, meta.total_pages)}
+              totalPages={meta.total_pages}
+              onPageChange={(nextPage) => updateParams({ page: nextPage })}
+            />
+          </div>
         )}
       </section>
 
@@ -225,7 +255,7 @@ export default function AllPostsPage() {
         open={Boolean(pendingDelete)}
         onOpenChange={(open) => !open && setPendingDelete(null)}
         title="Hapus artikel permanen?"
-        description={`“${pendingDelete?.title || 'Artikel ini'}” akan dihapus dari database dan tidak dapat dipulihkan.`}
+        description={`“${pendingDelete?.title || 'Artikel ini'}” beserta komentarnya akan dihapus dari database dan tidak dapat dipulihkan.`}
         loading={busyId === pendingDelete?.id}
         onConfirm={permanentlyDelete}
       />

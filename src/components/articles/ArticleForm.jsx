@@ -1,14 +1,18 @@
 import { useMemo, useState } from 'react'
 import { FileCheck2, FileClock, Info, Save } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { ArticleApiError } from '../../api/articleApi.js'
+import { ApiError } from '../../api/errors.js'
+import { parseTags } from '../../utils/articleUtils.js'
 import Button from '../ui/Button.jsx'
 
 const EMPTY_VALUES = {
   title: '',
   content: '',
-  category: '',
+  category_id: '',
+  tags: '',
 }
+
+const MAX_TAGS = 10
 
 function validateField(name, value) {
   const normalized = value.trim()
@@ -22,12 +26,17 @@ function validateField(name, value) {
   if (name === 'content') {
     if (!normalized) return 'Content wajib diisi.'
     if (normalized.length < 200) return 'Content minimal 200 karakter.'
+    if (normalized.length > 100000) return 'Content maksimal 100.000 karakter.'
   }
 
-  if (name === 'category') {
-    if (!normalized) return 'Category wajib diisi.'
-    if (normalized.length < 3) return 'Category minimal 3 karakter.'
-    if (normalized.length > 100) return 'Category maksimal 100 karakter.'
+  if (name === 'category_id') {
+    if (!normalized) return 'Pilih category.'
+  }
+
+  if (name === 'tags') {
+    const tags = parseTags(value)
+    if (tags.length > MAX_TAGS) return `Tag maksimal ${MAX_TAGS}.`
+    if (tags.some((tag) => tag.length < 2 || tag.length > 50)) return 'Setiap tag 2 sampai 50 karakter.'
   }
 
   return ''
@@ -51,7 +60,7 @@ function FieldError({ id, message }) {
   )
 }
 
-export default function ArticleForm({ initialValues, currentStatus, onSubmit }) {
+export default function ArticleForm({ categories = [], initialValues, currentStatus, onSubmit }) {
   const [values, setValues] = useState(() => ({
     ...EMPTY_VALUES,
     ...initialValues,
@@ -68,7 +77,7 @@ export default function ArticleForm({ initialValues, currentStatus, onSubmit }) 
     return [
       values.title.trim().length >= 20,
       values.content.trim().length >= 200,
-      values.category.trim().length >= 3,
+      Boolean(values.category_id),
     ].filter(Boolean).length
   }, [values])
 
@@ -109,15 +118,16 @@ export default function ArticleForm({ initialValues, currentStatus, onSubmit }) 
       await onSubmit({
         title: values.title.trim(),
         content: values.content.trim(),
-        category: values.category.trim(),
+        category_id: Number(values.category_id),
+        tags: parseTags(values.tags),
         status,
       })
     } catch (error) {
-      if (error instanceof ArticleApiError) {
-        setErrors((current) => ({ ...current, ...error.fieldErrors }))
+      if (error instanceof ApiError) {
+        setErrors((current) => ({ ...current, ...error.fields }))
         setFormError(error.message)
 
-        const firstServerField = Object.keys(error.fieldErrors)[0]
+        const firstServerField = Object.keys(error.fields)[0]
         if (firstServerField) document.getElementById(firstServerField)?.focus()
       } else {
         setFormError('Artikel belum dapat disimpan. Silakan coba lagi.')
@@ -192,35 +202,55 @@ export default function ArticleForm({ initialValues, currentStatus, onSubmit }) 
           <FieldError id="content-error" message={errors.content} />
         </div>
 
-        <div className="mt-6">
-          <label htmlFor="category" className="text-sm font-semibold text-text-primary">
-            Category <span className="text-accent-strong" aria-hidden="true">*</span>
-            <span className="sr-only">(wajib)</span>
-          </label>
-          <input
-            id="category"
-            name="category"
-            value={values.category}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className="focus-ring mt-2 min-h-12 w-full rounded-xl border border-border bg-bg-primary px-4 text-base text-text-primary placeholder:text-text-tertiary hover:border-text-tertiary"
-            placeholder="Teknologi"
-            list="category-suggestions"
-            aria-invalid={Boolean(errors.category)}
-            aria-describedby="category-help category-error"
-            maxLength={110}
-          />
-          <datalist id="category-suggestions">
-            <option value="Teknologi" />
-            <option value="Pemrograman" />
-            <option value="Backend" />
-            <option value="Frontend" />
-            <option value="Bisnis" />
-          </datalist>
-          <p id="category-help" className="mt-2 text-xs text-text-tertiary">
-            Category terdiri dari 3 sampai 100 karakter.
-          </p>
-          <FieldError id="category-error" message={errors.category} />
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          <div>
+            <label htmlFor="category_id" className="text-sm font-semibold text-text-primary">
+              Category <span className="text-accent-strong" aria-hidden="true">*</span>
+              <span className="sr-only">(wajib)</span>
+            </label>
+            <select
+              id="category_id"
+              name="category_id"
+              value={values.category_id}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="focus-ring mt-2 min-h-12 w-full cursor-pointer rounded-xl border border-border bg-bg-primary px-4 text-base text-text-primary hover:border-text-tertiary"
+              aria-invalid={Boolean(errors.category_id)}
+              aria-describedby="category-help category_id-error"
+            >
+              <option value="">Pilih category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
+            <p id="category-help" className="mt-2 text-xs text-text-tertiary">
+              {categories.length === 0
+                ? 'Belum ada category. Admin bisa membuatnya di halaman Categories.'
+                : 'Setiap artikel masuk ke satu category.'}
+            </p>
+            <FieldError id="category_id-error" message={errors.category_id} />
+          </div>
+
+          <div>
+            <label htmlFor="tags" className="text-sm font-semibold text-text-primary">
+              Tags
+            </label>
+            <input
+              id="tags"
+              name="tags"
+              value={values.tags}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="focus-ring mt-2 min-h-12 w-full rounded-xl border border-border bg-bg-primary px-4 text-base text-text-primary placeholder:text-text-tertiary hover:border-text-tertiary"
+              placeholder="golang, backend"
+              aria-invalid={Boolean(errors.tags)}
+              aria-describedby="tags-help tags-error"
+            />
+            <p id="tags-help" className="mt-2 text-xs text-text-tertiary">
+              Pisahkan dengan koma, paling banyak 10. Tag baru dibuat otomatis.
+            </p>
+            <FieldError id="tags-error" message={errors.tags} />
+          </div>
         </div>
       </div>
 
@@ -255,9 +285,9 @@ export default function ArticleForm({ initialValues, currentStatus, onSubmit }) 
             <Button
               type="button"
               variant="primary"
-              loading={submittingStatus === 'publish'}
+              loading={submittingStatus === 'published'}
               disabled={isSubmitting}
-              onClick={() => handleSubmit('publish')}
+              onClick={() => handleSubmit('published')}
               className="w-full"
             >
               <FileCheck2 aria-hidden="true" size={18} />
@@ -289,7 +319,7 @@ export default function ArticleForm({ initialValues, currentStatus, onSubmit }) 
             <div>
               <h2 className="text-sm font-semibold text-text-primary">Sebelum publish</h2>
               <p className="mt-1 text-sm leading-6 text-text-secondary">
-                Periksa kembali judul, keterbacaan content, dan category agar artikel mudah ditemukan.
+                Periksa kembali judul, keterbacaan content, category, dan tag agar artikel mudah ditemukan. Setelah terbit, alamat artikel tidak berubah lagi.
               </p>
             </div>
           </div>

@@ -1,58 +1,22 @@
-import { useCallback, useEffect, useState } from 'react'
-import { getAllArticles } from '../api/articleApi.js'
+import { listArticles } from '../api/articleApi.js'
+import useAsync from './useAsync.js'
 
-export default function useArticles() {
-  const [articles, setArticles] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState(null)
+const EMPTY_META = { page: 1, per_page: 0, total: 0, total_pages: 0 }
 
-  const fetchArticles = useCallback(async ({ silent = false } = {}) => {
-    if (silent) {
-      setRefreshing(true)
-    } else {
-      setLoading(true)
-    }
-
-    setError(null)
-
-    try {
-      const result = await getAllArticles()
-      setArticles(result)
-      return result
-    } catch (fetchError) {
-      setError(fetchError)
-      return []
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    let active = true
-
-    getAllArticles()
-      .then((result) => {
-        if (active) setArticles(result)
-      })
-      .catch((fetchError) => {
-        if (active) setError(fetchError)
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
+// useArticles memuat satu halaman artikel. mine berarti artikel milik
+// pengguna yang sedang login.
+export default function useArticles(params, { mine = false } = {}) {
+  const { data, loading, error, refresh } = useAsync(
+    () => listArticles(params, { mine }),
+    [params, mine],
+  )
 
   return {
-    articles,
-    loading,
-    refreshing,
+    articles: data?.data ?? [],
+    meta: data?.meta ?? EMPTY_META,
+    loading: loading && !data,
+    refreshing: loading && Boolean(data),
     error,
-    refresh: fetchArticles,
+    refresh,
   }
 }

@@ -37,7 +37,7 @@ function RowActions({ article, busyId, onTrash, onRestore, onDelete }) {
         <Pencil aria-hidden="true" size={17} />
       </Link>
 
-      {article.status === 'thrash' && (
+      {article.status === 'archived' && (
         <ActionButton
           label={`Pulihkan ${article.title} sebagai draft`}
           onClick={() => onRestore(article)}
@@ -48,8 +48,8 @@ function RowActions({ article, busyId, onTrash, onRestore, onDelete }) {
       )}
 
       <ActionButton
-        label={article.status === 'thrash' ? `Hapus permanen ${article.title}` : `Pindahkan ${article.title} ke trash`}
-        onClick={() => (article.status === 'thrash' ? onDelete(article) : onTrash(article))}
+        label={article.status === 'archived' ? `Hapus permanen ${article.title}` : `Pindahkan ${article.title} ke trash`}
+        onClick={() => (article.status === 'archived' ? onDelete(article) : onTrash(article))}
         disabled={isBusy}
         danger
       >
@@ -59,7 +59,7 @@ function RowActions({ article, busyId, onTrash, onRestore, onDelete }) {
   )
 }
 
-function DesktopTable({ articles, busyId, onTrash, onRestore, onDelete }) {
+function DesktopTable({ articles, busyId, showAuthor, onTrash, onRestore, onDelete }) {
   return (
     <div className="hidden overflow-x-auto md:block">
       <table className="w-full border-collapse text-left">
@@ -82,12 +82,15 @@ function DesktopTable({ articles, busyId, onTrash, onRestore, onDelete }) {
                 >
                   {article.title}
                 </Link>
-                <p className="mt-1 text-xs tabular-nums text-text-tertiary">ID #{article.id}</p>
+                <p className="mt-1 text-xs tabular-nums text-text-tertiary">
+                  ID #{article.id}
+                  {showAuthor && <span> · oleh {article.author.name}</span>}
+                </p>
               </td>
-              <td className="px-5 py-4 text-sm text-text-secondary">{article.category}</td>
+              <td className="px-5 py-4 text-sm text-text-secondary">{article.category.name}</td>
               <td className="px-5 py-4"><StatusBadge status={article.status} /></td>
               <td className="whitespace-nowrap px-5 py-4 text-sm text-text-secondary">
-                {formatArticleDate(article.updated_date)}
+                {formatArticleDate(article.updated_at)}
               </td>
               <td className="px-5 py-4">
                 <RowActions
@@ -124,11 +127,11 @@ function MobileCards({ articles, busyId, onTrash, onRestore, onDelete }) {
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
             <div>
               <dt className="text-xs text-text-tertiary">Category</dt>
-              <dd className="mt-1 font-medium text-text-secondary">{article.category}</dd>
+              <dd className="mt-1 font-medium text-text-secondary">{article.category.name}</dd>
             </div>
             <div>
               <dt className="text-xs text-text-tertiary">Updated</dt>
-              <dd className="mt-1 font-medium text-text-secondary">{formatArticleDate(article.updated_date)}</dd>
+              <dd className="mt-1 font-medium text-text-secondary">{formatArticleDate(article.updated_at)}</dd>
             </div>
           </dl>
           <div className="mt-5 border-t border-border pt-4">
@@ -161,7 +164,7 @@ export function ArticleListSkeleton() {
   )
 }
 
-export default function ArticleList({ articles, busyId, onTrash, onRestore, onDelete }) {
+export default function ArticleList({ articles, busyId, showAuthor = false, onTrash, onRestore, onDelete }) {
   if (articles.length === 0) {
     return (
       <EmptyState
@@ -177,6 +180,7 @@ export default function ArticleList({ articles, busyId, onTrash, onRestore, onDe
       <DesktopTable
         articles={articles}
         busyId={busyId}
+        showAuthor={showAuthor}
         onTrash={onTrash}
         onRestore={onRestore}
         onDelete={onDelete}

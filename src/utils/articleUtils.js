@@ -1,14 +1,22 @@
 export const ARTICLE_STATUS = {
-  PUBLISH: 'publish',
+  PUBLISHED: 'published',
   DRAFT: 'draft',
-  THRASH: 'thrash',
+  ARCHIVED: 'archived',
 }
 
+// Tab "Trashed" memakai status archived di backend: artikel disembunyikan dari
+// publik tanpa dihapus, dan bisa dipulihkan.
 export const STATUS_TABS = [
-  { key: ARTICLE_STATUS.PUBLISH, label: 'Published', shortLabel: 'Publish' },
+  { key: ARTICLE_STATUS.PUBLISHED, label: 'Published', shortLabel: 'Publish' },
   { key: ARTICLE_STATUS.DRAFT, label: 'Drafts', shortLabel: 'Draft' },
-  { key: ARTICLE_STATUS.THRASH, label: 'Trashed', shortLabel: 'Trash' },
+  { key: ARTICLE_STATUS.ARCHIVED, label: 'Trashed', shortLabel: 'Trash' },
 ]
+
+export const ROLE_LABELS = {
+  admin: 'Admin',
+  author: 'Penulis',
+  reader: 'Pembaca',
+}
 
 export function formatArticleDate(value, options = {}) {
   if (!value) return '-'
@@ -24,18 +32,15 @@ export function formatArticleDate(value, options = {}) {
   }).format(date)
 }
 
-export function getArticleExcerpt(content, maxLength = 180) {
-  const normalized = content?.replace(/\s+/g, ' ').trim() || ''
-
-  if (normalized.length <= maxLength) return normalized
-
-  return `${normalized.slice(0, maxLength).trimEnd()}...`
-}
-
-export function sortByUpdatedDate(articles) {
-  return [...articles].sort((first, second) => {
-    const firstDate = new Date(first.updated_date || first.created_date).getTime()
-    const secondDate = new Date(second.updated_date || second.created_date).getTime()
-    return secondDate - firstDate
-  })
+// parseTags mengubah isian "golang, Backend,  api" menjadi daftar tag.
+export function parseTags(value) {
+  const seen = new Set()
+  return value
+    .split(',')
+    .map((tag) => tag.replace(/\s+/g, ' ').trim().toLowerCase())
+    .filter((tag) => {
+      if (!tag || seen.has(tag)) return false
+      seen.add(tag)
+      return true
+    })
 }

@@ -1,16 +1,69 @@
 import { useEffect, useState } from 'react'
-import { FilePlus2, Files, Menu, Newspaper, X } from 'lucide-react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { FilePlus2, Files, FolderTree, LogIn, LogOut, Menu, Newspaper, Users, X } from 'lucide-react'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import Logo from '../components/ui/Logo.jsx'
 import ServiceStatus from '../components/ui/ServiceStatus.jsx'
 import ThemeToggle from '../components/ui/ThemeToggle.jsx'
+import useAuth from '../hooks/useAuth.js'
 import useServiceHealth from '../hooks/useServiceHealth.js'
+import { ROLE_LABELS } from '../utils/articleUtils.js'
 
-const navigation = [
-  { label: 'All Posts', to: '/posts', icon: Files, end: true },
-  { label: 'Add New', to: '/posts/new', icon: FilePlus2 },
-  { label: 'Preview', to: '/preview', icon: Newspaper },
+const allNavigation = [
+  { label: 'Preview', to: '/preview', icon: Newspaper, end: true },
+  { label: 'All Posts', to: '/posts', icon: Files, end: true, writers: true },
+  { label: 'Add New', to: '/posts/new', icon: FilePlus2, writers: true },
+  { label: 'Categories', to: '/categories', icon: FolderTree, admins: true },
+  { label: 'Users', to: '/users', icon: Users, admins: true },
 ]
+
+function useNavigation() {
+  const { canWrite, isAdmin } = useAuth()
+  return allNavigation.filter((item) => (!item.writers || canWrite) && (!item.admins || isAdmin))
+}
+
+function AccountPanel({ onNavigate }) {
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  if (!user) {
+    return (
+      <Link
+        to="/login"
+        onClick={onNavigate}
+        className="focus-ring flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand px-4 text-sm font-semibold text-brand-contrast transition-opacity duration-200 hover:opacity-90"
+      >
+        <LogIn aria-hidden="true" size={17} />
+        Masuk
+      </Link>
+    )
+  }
+
+  async function signOut() {
+    onNavigate?.()
+    await logout()
+    toast.success('Kamu sudah keluar.')
+    navigate('/preview')
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-bg-soft px-3 py-2.5">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-semibold text-text-primary">{user.name}</p>
+        <p className="text-xs text-text-tertiary">{ROLE_LABELS[user.role] || user.role}</p>
+      </div>
+      <button
+        type="button"
+        onClick={signOut}
+        className="focus-ring grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-text-secondary transition-colors duration-200 hover:bg-bg-hover hover:text-text-primary"
+        aria-label="Keluar"
+        title="Keluar"
+      >
+        <LogOut aria-hidden="true" size={18} />
+      </button>
+    </div>
+  )
+}
 
 function NavigationLink({ item, onNavigate }) {
   const Icon = item.icon
@@ -35,6 +88,8 @@ function NavigationLink({ item, onNavigate }) {
 }
 
 function DesktopSidebar({ serviceStatus }) {
+  const navigation = useNavigation()
+
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-border bg-bg-secondary lg:flex lg:flex-col">
       <div className="px-6 pb-7 pt-6">
@@ -51,9 +106,10 @@ function DesktopSidebar({ serviceStatus }) {
       </nav>
 
       <div className="space-y-3 border-t border-border p-4">
+        <AccountPanel />
         <ServiceStatus status={serviceStatus} />
         <div className="flex items-center justify-between px-1">
-          <p className="text-xs text-text-tertiary">Sharing Vision CMS</p>
+          <p className="text-xs text-text-tertiary">Warta</p>
           <ThemeToggle />
         </div>
       </div>
@@ -63,6 +119,7 @@ function DesktopSidebar({ serviceStatus }) {
 
 function MobileHeader({ serviceStatus }) {
   const [open, setOpen] = useState(false)
+  const navigation = useNavigation()
 
   useEffect(() => {
     function closeOnEscape(event) {
@@ -102,6 +159,9 @@ function MobileHeader({ serviceStatus }) {
           {navigation.map((item) => (
             <NavigationLink key={item.to} item={item} onNavigate={() => setOpen(false)} />
           ))}
+          <div className="pt-3">
+            <AccountPanel onNavigate={() => setOpen(false)} />
+          </div>
         </nav>
       )}
     </header>

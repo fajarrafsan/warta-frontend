@@ -9,33 +9,26 @@ export default function Logo({ compact = false }) {
           fill="none"
         >
           <path
-            d="M9 12.5h13.5c5 0 8.5 2.8 8.5 7.5s-3.5 7.5-8.5 7.5H17"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <path
-            d="M9 12.5 18 20l-9 7.5"
+            d="M8 12l5 16 7-12 7 12 5-16"
             stroke="currentColor"
             strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <circle cx="30" cy="10" r="3" fill="var(--accent-color)" />
+          <circle cx="32" cy="9" r="3" fill="var(--accent-color)" />
         </svg>
       </span>
 
       {!compact && (
         <span className="min-w-0">
           <span className="block truncate font-display text-xl font-semibold leading-none text-text-primary">
-            Sharing Vision
+            Warta
           </span>
           <span className="mt-1 block text-[11px] font-semibold uppercase tracking-[0.18em] text-text-tertiary">
-            Article studio
+            Ruang redaksi
           </span>
         </span>
       )}
     </div>
   )
 }
-

@@ -1,11 +1,12 @@
 import { ArrowLeft } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { createArticle, updateArticle } from '../api/articleApi.js'
+import { createArticle, replaceArticle } from '../api/articleApi.js'
 import ArticleForm from '../components/articles/ArticleForm.jsx'
 import ErrorState from '../components/ui/ErrorState.jsx'
 import PageHeader from '../components/ui/PageHeader.jsx'
 import useArticle from '../hooks/useArticle.js'
+import useCategories from '../hooks/useCategories.js'
 import useDocumentTitle from '../hooks/useDocumentTitle.js'
 
 function EditorSkeleton() {
@@ -26,20 +27,26 @@ export default function ArticleEditorPage() {
   const navigate = useNavigate()
   const isEditing = Boolean(id)
   const { article, loading, error, refresh } = useArticle(id)
+  const categories = useCategories()
 
   useDocumentTitle(isEditing ? 'Edit Article' : 'Add New')
 
   async function saveArticle(payload) {
+    const published = payload.status === 'published'
+
     if (isEditing) {
-      await updateArticle(id, payload)
-      toast.success(payload.status === 'publish' ? 'Artikel diperbarui dan dipublish.' : 'Perubahan disimpan sebagai draft.')
+      await replaceArticle(id, payload)
+      toast.success(published ? 'Artikel diperbarui dan dipublish.' : 'Perubahan disimpan sebagai draft.')
     } else {
       await createArticle(payload)
-      toast.success(payload.status === 'publish' ? 'Artikel berhasil dipublish.' : 'Artikel disimpan sebagai draft.')
+      toast.success(published ? 'Artikel berhasil dipublish.' : 'Artikel disimpan sebagai draft.')
     }
 
     navigate(`/posts?status=${payload.status}`)
   }
+
+  const pageLoading = (isEditing && loading) || categories.loading
+  const pageError = (isEditing && error) || categories.error
 
   return (
     <div className="animate-fade-up space-y-7">
@@ -59,17 +66,25 @@ export default function ArticleEditorPage() {
           : 'Tulis artikel baru dan tentukan kapan artikel siap ditampilkan.'}
       />
 
-      {isEditing && loading ? (
+      {pageLoading ? (
         <EditorSkeleton />
-      ) : isEditing && error ? (
-        <ErrorState error={error} onRetry={refresh} />
+      ) : pageError ? (
+        <ErrorState
+          error={pageError}
+          onRetry={() => {
+            refresh()
+            categories.refresh()
+          }}
+        />
       ) : (
         <ArticleForm
           key={article?.id || 'new'}
+          categories={categories.categories}
           initialValues={article ? {
             title: article.title,
             content: article.content,
-            category: article.category,
+            category_id: String(article.category.id),
+            tags: article.tags.map((tag) => tag.name).join(', '),
           } : undefined}
           currentStatus={article?.status}
           onSubmit={saveArticle}
@@ -78,4 +93,3 @@ export default function ArticleEditorPage() {
     </div>
   )
 }
-
