@@ -25,6 +25,12 @@ React JSX, Vite, Tailwind CSS v4, dan pnpm.
 - Editor Markdown dengan toolbar (subjudul, tebal, miring, tautan, kutipan,
   daftar, kode), sisip gambar, pratinjau langsung, dan upload gambar sampul.
 - Kelola kategori dan role pengguna (admin).
+- Moderasi komentar (admin): komentar yang dilaporkan pembaca atau
+  disembunyikan otomatis, dengan pilihan tampilkan, sembunyikan, atau hapus.
+
+Pembaca bisa melaporkan komentar orang lain (spam, kasar, atau alasan lain).
+Pesan dari aturan anti-spam backend, seperti batas tautan atau kiriman ganda,
+tampil langsung di form komentar.
 
 Login memakai access token yang diperbarui otomatis dengan refresh token.
 Menu dan halaman mengikuti role: pembaca bisa menyukai, menyimpan, dan
@@ -105,7 +111,7 @@ pnpm test      # unit/component test
 | `/login`, `/register` | publik | masuk dan daftar |
 | `/studio` | penulis, admin | dashboard |
 | `/studio/artikel`, `/studio/tulis`, `/studio/artikel/:id/edit` | penulis, admin | kelola dan tulis artikel |
-| `/studio/kategori`, `/studio/pengguna` | admin | kelola kategori dan role |
+| `/studio/kategori`, `/studio/pengguna`, `/studio/moderasi` | admin | kelola kategori, role, dan komentar yang dilaporkan |
 
 Alamat versi sebelumnya (`/preview`, `/posts`, `/categories`, `/users`) tetap
 bisa dibuka dan diarahkan ke alamat baru.

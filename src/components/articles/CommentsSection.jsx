@@ -7,6 +7,7 @@ import useAsync from '../../hooks/useAsync.js'
 import useAuth from '../../hooks/useAuth.js'
 import { formatArticleDate } from '../../utils/articleUtils.js'
 import Button from '../ui/Button.jsx'
+import ReportMenu from './ReportMenu.jsx'
 
 const PER_PAGE = 20
 
@@ -110,6 +111,7 @@ export default function CommentsSection({ article }) {
       <ol className="mt-8 space-y-5">
         {items.map((comment) => {
           const canDelete = user && (user.id === comment.author.id || isAdmin)
+          const canReport = user && user.id !== comment.author.id
           return (
             <li key={comment.id} className="rounded-2xl border border-border bg-bg-secondary p-5">
               <div className="flex items-start justify-between gap-3">
@@ -119,6 +121,8 @@ export default function CommentsSection({ article }) {
                     {formatArticleDate(comment.created_at, { month: 'long', hour: '2-digit', minute: '2-digit' })}
                   </time>
                 </div>
+                <div className="flex shrink-0 items-center">
+                {canReport && <ReportMenu comment={comment} onHidden={comments.refresh} />}
                 {canDelete && (
                   <Button
                     variant="ghost"
@@ -131,6 +135,7 @@ export default function CommentsSection({ article }) {
                     {deletingId !== comment.id && <Trash2 aria-hidden="true" size={17} />}
                   </Button>
                 )}
+                </div>
               </div>
               <p className="mt-3 whitespace-pre-wrap leading-7 text-text-secondary">{comment.body}</p>
             </li>

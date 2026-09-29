@@ -61,3 +61,9 @@ export function readingLabel(minutes) {
 export function estimateReadingMinutes(text) {
   return Math.max(1, Math.ceil((text?.length || 0) / 1200))
 }
+
+export const REPORT_REASONS = [
+  { value: 'spam', label: 'Spam atau iklan' },
+  { value: 'abusive', label: 'Kasar atau menyerang' },
+  { value: 'other', label: 'Alasan lain' },
+]

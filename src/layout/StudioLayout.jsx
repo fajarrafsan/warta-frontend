@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ExternalLink, FilePlus2, Files, FolderTree, LayoutDashboard, LogIn, LogOut, Menu, Users, X } from 'lucide-react'
+import { ExternalLink, FilePlus2, Files, FolderTree, LayoutDashboard, LogIn, LogOut, Menu, ShieldAlert, Users, X } from 'lucide-react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import Logo from '../components/ui/Logo.jsx'
@@ -15,6 +15,7 @@ const allNavigation = [
   { label: 'Tulis', to: '/studio/tulis', icon: FilePlus2 },
   { label: 'Kategori', to: '/studio/kategori', icon: FolderTree, admins: true },
   { label: 'Pengguna', to: '/studio/pengguna', icon: Users, admins: true },
+  { label: 'Moderasi', to: '/studio/moderasi', icon: ShieldAlert, admins: true },
 ]
 
 function useNavigation() {

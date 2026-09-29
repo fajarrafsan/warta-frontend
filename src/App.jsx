@@ -17,6 +17,7 @@ const AllPostsPage = lazy(() => import('./pages/AllPostsPage.jsx'))
 const ArticleEditorPage = lazy(() => import('./pages/ArticleEditorPage.jsx'))
 const CategoriesPage = lazy(() => import('./pages/CategoriesPage.jsx'))
 const UsersPage = lazy(() => import('./pages/UsersPage.jsx'))
+const ModerationPage = lazy(() => import('./pages/ModerationPage.jsx'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage.jsx'))
 
 const WRITERS = ['admin', 'author']
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="artikel/:id/edit" element={<ArticleEditorPage />} />
             <Route path="kategori" element={<RequireAuth roles={ADMINS}><CategoriesPage /></RequireAuth>} />
             <Route path="pengguna" element={<RequireAuth roles={ADMINS}><UsersPage /></RequireAuth>} />
+            <Route path="moderasi" element={<RequireAuth roles={ADMINS}><ModerationPage /></RequireAuth>} />
           </Route>
 
           <Route path="/preview" element={<Legacy to="/" />} />
