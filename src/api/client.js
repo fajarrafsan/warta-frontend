@@ -5,6 +5,13 @@ import { clearSession, getSession, setSession, toSession } from './session.js'
 // /health ke backend.
 const baseURL = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, '') || ''
 
+// assetUrl mengubah path berkas dari backend (misalnya /uploads/ab12.png)
+// menjadi URL lengkap bila backend berada di origin lain.
+export function assetUrl(path) {
+  if (!path || /^https?:\/\//.test(path)) return path || ''
+  return `${baseURL}${path}`
+}
+
 const defaults = {
   baseURL,
   timeout: 15000,

@@ -39,3 +39,17 @@
   --app-shadow-card: 0 16px 42px -22px rgb(0 0 0 / 0.72);
   --app-shadow-float: 0 28px 60px -26px rgb(0 0 0 / 0.85);
 }
+
+/* Warna grafik dashboard. Dua seri tunggal (dibaca, komentar), divalidasi
+   dengan validator palet untuk permukaan terang #ffffff dan gelap #18181b. */
+:root {
+  --chart-views: #2a78d6;
+  --chart-comments: #eb6834;
+  --chart-grid: #ececea;
+}
+
+:root.dark {
+  --chart-views: #3987e5;
+  --chart-comments: #d95926;
+  --chart-grid: #2c2c31;
+}

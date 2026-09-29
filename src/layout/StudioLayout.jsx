@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FilePlus2, Files, FolderTree, LogIn, LogOut, Menu, Newspaper, Users, X } from 'lucide-react'
+import { ExternalLink, FilePlus2, Files, FolderTree, LayoutDashboard, LogIn, LogOut, Menu, Users, X } from 'lucide-react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import Logo from '../components/ui/Logo.jsx'
@@ -10,16 +10,16 @@ import useServiceHealth from '../hooks/useServiceHealth.js'
 import { ROLE_LABELS } from '../utils/articleUtils.js'
 
 const allNavigation = [
-  { label: 'Preview', to: '/preview', icon: Newspaper, end: true },
-  { label: 'All Posts', to: '/posts', icon: Files, end: true, writers: true },
-  { label: 'Add New', to: '/posts/new', icon: FilePlus2, writers: true },
-  { label: 'Categories', to: '/categories', icon: FolderTree, admins: true },
-  { label: 'Users', to: '/users', icon: Users, admins: true },
+  { label: 'Dashboard', to: '/studio', icon: LayoutDashboard, end: true },
+  { label: 'Artikel', to: '/studio/artikel', icon: Files },
+  { label: 'Tulis', to: '/studio/tulis', icon: FilePlus2 },
+  { label: 'Kategori', to: '/studio/kategori', icon: FolderTree, admins: true },
+  { label: 'Pengguna', to: '/studio/pengguna', icon: Users, admins: true },
 ]
 
 function useNavigation() {
-  const { canWrite, isAdmin } = useAuth()
-  return allNavigation.filter((item) => (!item.writers || canWrite) && (!item.admins || isAdmin))
+  const { isAdmin } = useAuth()
+  return allNavigation.filter((item) => !item.admins || isAdmin)
 }
 
 function AccountPanel({ onNavigate }) {
@@ -43,7 +43,7 @@ function AccountPanel({ onNavigate }) {
     onNavigate?.()
     await logout()
     toast.success('Kamu sudah keluar.')
-    navigate('/preview')
+    navigate('/')
   }
 
   return (
@@ -87,6 +87,18 @@ function NavigationLink({ item, onNavigate }) {
   )
 }
 
+function SiteLink() {
+  return (
+    <Link
+      to="/"
+      className="focus-ring flex min-h-12 items-center gap-3 rounded-xl px-3.5 text-sm font-semibold text-text-secondary transition-colors duration-200 hover:bg-bg-hover hover:text-text-primary"
+    >
+      <ExternalLink aria-hidden="true" size={19} strokeWidth={1.9} />
+      Lihat situs
+    </Link>
+  )
+}
+
 function DesktopSidebar({ serviceStatus }) {
   const navigation = useNavigation()
 
@@ -98,11 +110,12 @@ function DesktopSidebar({ serviceStatus }) {
 
       <nav className="flex-1 space-y-1.5 px-4" aria-label="Navigasi utama">
         <p className="px-3.5 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-text-tertiary">
-          Workspace
+          Ruang redaksi
         </p>
         {navigation.map((item) => (
           <NavigationLink key={item.to} item={item} />
         ))}
+        <SiteLink />
       </nav>
 
       <div className="space-y-3 border-t border-border p-4">
@@ -159,6 +172,7 @@ function MobileHeader({ serviceStatus }) {
           {navigation.map((item) => (
             <NavigationLink key={item.to} item={item} onNavigate={() => setOpen(false)} />
           ))}
+          <SiteLink />
           <div className="pt-3">
             <AccountPanel onNavigate={() => setOpen(false)} />
           </div>
@@ -168,7 +182,7 @@ function MobileHeader({ serviceStatus }) {
   )
 }
 
-export default function AppShell() {
+export default function StudioLayout() {
   const serviceStatus = useServiceHealth()
 
   return (

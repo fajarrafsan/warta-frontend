@@ -63,6 +63,58 @@ export async function getServiceHealth() {
   })
 }
 
+export async function listBookmarks(params = {}) {
+  return call(async () => {
+    const response = await api.get('/api/v1/me/bookmarks', { params: query(params) })
+    return { data: response.data.data, meta: response.data.meta }
+  })
+}
+
+// setLike dan setBookmark mengembalikan keadaan terbaru:
+// { liked, bookmarked, like_count }.
+export async function setLike(id, liked) {
+  return call(async () => {
+    const response = await (liked ? api.put : api.delete)(`/api/v1/articles/${id}/like`)
+    return response.data.data
+  })
+}
+
+export async function setBookmark(id, bookmarked) {
+  return call(async () => {
+    const response = await (bookmarked ? api.put : api.delete)(`/api/v1/articles/${id}/bookmark`)
+    return response.data.data
+  })
+}
+
+// recordView dipanggil sekali saat halaman baca dibuka. Kegagalannya tidak
+// perlu mengganggu pembaca.
+export async function recordView(id) {
+  try {
+    await api.post(`/api/v1/articles/${id}/view`)
+  } catch {
+    // Hitungan dibaca bersifat pelengkap.
+  }
+}
+
+export async function uploadImage(file) {
+  return call(async () => {
+    const form = new FormData()
+    form.append('image', file)
+    const response = await api.post('/api/v1/uploads', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000,
+    })
+    return response.data.data.url
+  })
+}
+
+export async function getStats(days = 30) {
+  return call(async () => {
+    const response = await api.get('/api/v1/stats', { params: { days } })
+    return response.data.data
+  })
+}
+
 // toArticlePayload membentuk body PUT dari artikel hasil response.
 export function toArticlePayload(article, status = article.status) {
   return {
@@ -70,6 +122,7 @@ export function toArticlePayload(article, status = article.status) {
     content: article.content,
     category_id: article.category.id,
     tags: article.tags.map((tag) => tag.name),
+    cover_image: article.cover_image || '',
     status,
   }
 }

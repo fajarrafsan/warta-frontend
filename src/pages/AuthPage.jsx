@@ -44,7 +44,7 @@ export default function AuthPage({ mode }) {
   const [submitting, setSubmitting] = useState(false)
 
   if (user && !submitting) {
-    return <Navigate to={next || (user.role === 'reader' ? '/preview' : '/posts')} replace />
+    return <Navigate to={next || (user.role === 'reader' ? '/' : '/studio')} replace />
   }
 
   function handleChange(event) {
@@ -67,7 +67,7 @@ export default function AuthPage({ mode }) {
       if (isRegister) {
         toast.success('Akun dibuat. Minta admin menjadikanmu penulis bila ingin menulis artikel.')
       }
-      navigate(next || (signedIn.role === 'reader' ? '/preview' : '/posts'), { replace: true })
+      navigate(next || (signedIn.role === 'reader' ? '/' : '/studio'), { replace: true })
     } catch (error) {
       setErrors(error.fields || {})
       setFormError(Object.keys(error.fields || {}).length > 0 ? '' : error.message)
@@ -129,7 +129,7 @@ export default function AuthPage({ mode }) {
         </div>
 
         <Link
-          to="/preview"
+          to="/"
           className="focus-ring mt-6 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-2 text-sm font-semibold text-text-secondary transition-colors duration-200 hover:text-text-primary"
         >
           <ArrowLeft aria-hidden="true" size={17} />

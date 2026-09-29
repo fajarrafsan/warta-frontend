@@ -14,7 +14,7 @@ import { formatArticleDate, ROLE_LABELS } from '../utils/articleUtils.js'
 const ROLES = ['admin', 'author', 'reader']
 
 export default function UsersPage() {
-  useDocumentTitle('Users')
+  useDocumentTitle('Pengguna')
 
   const { user: me } = useAuth()
   const [search, setSearch] = useState('')
@@ -45,7 +45,7 @@ export default function UsersPage() {
     <div className="animate-fade-up space-y-7">
       <PageHeader
         eyebrow="Admin"
-        title="Users"
+        title="Pengguna"
         description="Akun baru selalu berperan pembaca. Jadikan penulis supaya bisa menulis artikel."
       />
 

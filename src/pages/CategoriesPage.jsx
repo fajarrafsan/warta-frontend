@@ -44,7 +44,7 @@ function CategoryFields({ values, errors, onChange, idPrefix }) {
 }
 
 export default function CategoriesPage() {
-  useDocumentTitle('Categories')
+  useDocumentTitle('Kategori')
 
   const { categories, loading, error, refresh } = useCategories()
   const [draft, setDraft] = useState({ name: '', description: '' })
@@ -112,7 +112,7 @@ export default function CategoriesPage() {
     <div className="animate-fade-up space-y-7">
       <PageHeader
         eyebrow="Admin"
-        title="Categories"
+        title="Kategori"
         description="Setiap artikel masuk ke satu category. Category yang masih dipakai artikel tidak bisa dihapus."
       />
 

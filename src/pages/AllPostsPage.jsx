@@ -32,7 +32,7 @@ function fetchCounts(mine) {
 }
 
 export default function AllPostsPage() {
-  useDocumentTitle('All Posts')
+  useDocumentTitle('Artikel')
 
   const { isAdmin } = useAuth()
   const mine = !isAdmin
@@ -141,18 +141,18 @@ export default function AllPostsPage() {
   return (
     <div className="animate-fade-up space-y-7">
       <PageHeader
-        eyebrow="Dashboard"
-        title="All Posts"
+        eyebrow="Ruang redaksi"
+        title="Artikel"
         description={isAdmin
           ? 'Kelola artikel semua penulis: published, draft, dan trashed.'
           : 'Kelola artikel milikmu: published, draft, dan trashed.'}
       >
         <Link
-          to="/posts/new"
+          to="/studio/tulis"
           className="focus-ring inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand bg-brand px-5 text-sm font-semibold text-brand-contrast transition-opacity duration-200 hover:opacity-90"
         >
           <FilePlus2 aria-hidden="true" size={18} />
-          Add New
+          Tulis artikel
         </Link>
       </PageHeader>
 

@@ -29,7 +29,7 @@ export default function ArticleEditorPage() {
   const { article, loading, error, refresh } = useArticle(id)
   const categories = useCategories()
 
-  useDocumentTitle(isEditing ? 'Edit Article' : 'Add New')
+  useDocumentTitle(isEditing ? 'Edit artikel' : 'Tulis artikel')
 
   async function saveArticle(payload) {
     const published = payload.status === 'published'
@@ -42,7 +42,7 @@ export default function ArticleEditorPage() {
       toast.success(published ? 'Artikel berhasil dipublish.' : 'Artikel disimpan sebagai draft.')
     }
 
-    navigate(`/posts?status=${payload.status}`)
+    navigate(`/studio/artikel?status=${payload.status}`)
   }
 
   const pageLoading = (isEditing && loading) || categories.loading
@@ -51,16 +51,16 @@ export default function ArticleEditorPage() {
   return (
     <div className="animate-fade-up space-y-7">
       <Link
-        to="/posts"
+        to="/studio/artikel"
         className="focus-ring inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-2 text-sm font-semibold text-text-secondary transition-colors duration-200 hover:bg-bg-hover hover:text-text-primary"
       >
         <ArrowLeft aria-hidden="true" size={17} />
-        Kembali ke All Posts
+        Kembali ke daftar artikel
       </Link>
 
       <PageHeader
-        eyebrow={isEditing ? `Article #${id}` : 'New article'}
-        title={isEditing ? 'Edit Article' : 'Add New'}
+        eyebrow={isEditing ? `Artikel #${id}` : 'Artikel baru'}
+        title={isEditing ? 'Edit artikel' : 'Tulis artikel'}
         description={isEditing
           ? 'Perbarui isi artikel lalu pilih Publish atau simpan kembali sebagai Draft.'
           : 'Tulis artikel baru dan tentukan kapan artikel siap ditampilkan.'}
@@ -85,6 +85,7 @@ export default function ArticleEditorPage() {
             content: article.content,
             category_id: String(article.category.id),
             tags: article.tags.map((tag) => tag.name).join(', '),
+            cover_image: article.cover_image || '',
           } : undefined}
           currentStatus={article?.status}
           onSubmit={saveArticle}

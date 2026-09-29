@@ -1,26 +1,34 @@
 # Warta Frontend
 
 Frontend untuk [Warta](https://github.com/fajarrafsan/warta-backend):
-ruang redaksi untuk penulis dan admin, sekaligus halaman baca untuk publik.
+situs baca bergaya majalah untuk publik, sekaligus ruang redaksi untuk penulis
+dan admin.
 React JSX, Vite, Tailwind CSS v4, dan pnpm.
 
 ## Fitur
 
-- **Preview** untuk publik: artikel terbit dengan filter category dan tag,
-  paging dari backend, detail artikel lewat slug, dan komentar.
-- **Login dan daftar.** Access token diperbarui otomatis dengan refresh token
-  saat kedaluwarsa; sesi berakhir bila refresh gagal.
-- **All Posts** untuk penulis dan admin: tab Published, Drafts, dan Trashed
-  dengan jumlah per status, pencarian, dan paging dari backend. Penulis melihat
-  artikelnya sendiri, admin melihat semua.
-- **Add New / Edit** dengan category dari backend, tag, dan validasi yang sama
-  seperti backend.
-- **Categories** dan **Users** khusus admin: kelola category dan naikkan role
-  akun menjadi penulis.
-- Dark mode, status koneksi backend, dan layout responsif.
+**Situs baca (publik)**, bergaya majalah dengan header atas:
 
-Menu yang tampil mengikuti role akun: pengunjung dan pembaca hanya melihat
-Preview, penulis mendapat All Posts dan Add New, admin mendapat semuanya.
+- Beranda: artikel utama bersampul, daftar terkini, peringkat terpopuler, dan
+  artikel lainnya dengan paging.
+- Halaman artikel: sampul, isi Markdown (subjudul, kode, kutipan, tabel),
+  waktu baca, jumlah dibaca, tombol suka, simpan, dan salin tautan, komentar,
+  serta artikel lain di kategori yang sama.
+- Halaman per kategori dan tag, pencarian, dan halaman Tersimpan.
+
+**Ruang redaksi** (`/studio`) untuk penulis dan admin:
+
+- Dashboard: angka ringkas, grafik dibaca per hari, komentar per hari, dan
+  artikel terpopuler untuk 7, 30, atau 90 hari. Grafik bisa ditampilkan
+  sebagai tabel. Admin juga melihat jumlah akun per role.
+- Daftar artikel per status dengan pencarian dan paging.
+- Editor Markdown dengan toolbar (subjudul, tebal, miring, tautan, kutipan,
+  daftar, kode), sisip gambar, pratinjau langsung, dan upload gambar sampul.
+- Kelola kategori dan role pengguna (admin).
+
+Login memakai access token yang diperbarui otomatis dengan refresh token.
+Menu dan halaman mengikuti role: pembaca bisa menyukai, menyimpan, dan
+berkomentar; penulis mendapat ruang redaksi; admin mendapat semuanya.
 
 ## Menjalankan project
 
@@ -43,12 +51,12 @@ Buka `http://localhost:5173` dan masuk dengan akun admin bawaan backend
 
 Alur pertama kali:
 
-1. Masuk sebagai admin, buat category di halaman **Categories**.
+1. Masuk sebagai admin, buat kategori di **Ruang redaksi → Kategori**.
 2. Daftar akun baru; akun baru selalu berperan pembaca.
-3. Sebagai admin, jadikan akun itu penulis di halaman **Users**.
-4. Masuk dengan akun penulis, lalu tulis artikel di **Add New**.
+3. Sebagai admin, jadikan akun itu penulis di **Ruang redaksi → Pengguna**.
+4. Masuk dengan akun penulis, lalu tulis artikel di **Ruang redaksi → Tulis**.
 
-Saat development, request `/api` dan `/health` diteruskan Vite ke
+Saat development, request `/api`, `/health`, dan `/uploads` diteruskan Vite ke
 `http://localhost:8080`, jadi CORS tidak perlu diatur untuk penggunaan lokal.
 
 ## Environment
@@ -89,12 +97,18 @@ pnpm test      # unit/component test
 
 | Route | Akses | |
 |---|---|---|
-| `/preview` | publik | daftar artikel terbit |
-| `/preview/:slug` | publik | detail artikel dan komentar (id lama juga diterima) |
+| `/` | publik | beranda (`?sort=popular` untuk terpopuler) |
+| `/artikel/:slug` | publik | halaman baca (id juga diterima) |
+| `/kategori/:slug`, `/tag/:slug` | publik | artikel per kategori atau tag |
+| `/cari?q=` | publik | pencarian |
+| `/tersimpan` | login | artikel yang disimpan |
 | `/login`, `/register` | publik | masuk dan daftar |
-| `/posts` | penulis, admin | artikel per status |
-| `/posts/new`, `/posts/:id/edit` | penulis, admin | tulis dan ubah artikel |
-| `/categories`, `/users` | admin | kelola category dan role |
+| `/studio` | penulis, admin | dashboard |
+| `/studio/artikel`, `/studio/tulis`, `/studio/artikel/:id/edit` | penulis, admin | kelola dan tulis artikel |
+| `/studio/kategori`, `/studio/pengguna` | admin | kelola kategori dan role |
+
+Alamat versi sebelumnya (`/preview`, `/posts`, `/categories`, `/users`) tetap
+bisa dibuka dan diarahkan ke alamat baru.
 
 ## Catatan
 

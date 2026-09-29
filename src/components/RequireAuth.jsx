@@ -15,7 +15,7 @@ export default function RequireAuth({ roles, children }) {
 
   if (roles && !roles.includes(user.role)) {
     return (
-      <div className="rounded-2xl border border-border bg-bg-secondary shadow-card">
+      <div className="mx-auto my-12 max-w-2xl rounded-2xl border border-border bg-bg-secondary px-4 shadow-card">
         <EmptyState
           icon={ShieldAlert}
           title="Halaman ini bukan untuk role kamu"
@@ -24,7 +24,7 @@ export default function RequireAuth({ roles, children }) {
             : 'Hanya admin yang bisa membuka halaman ini.'}
         >
           <Link
-            to="/preview"
+            to="/"
             className="focus-ring inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl bg-brand px-5 text-sm font-semibold text-brand-contrast"
           >
             Baca artikel

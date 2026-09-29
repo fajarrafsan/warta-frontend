@@ -55,6 +55,7 @@ describe('ArticleForm', () => {
         content: content.trim(),
         category_id: 2,
         tags: ['golang', 'backend'],
+        cover_image: '',
         status: 'draft',
       })
     })

@@ -80,6 +80,7 @@ describe('articleApi', () => {
       content: article.content,
       category_id: 3,
       tags: ['golang'],
+      cover_image: '',
       status: 'archived',
     })
   })

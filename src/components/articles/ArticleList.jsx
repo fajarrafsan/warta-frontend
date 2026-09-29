@@ -29,7 +29,7 @@ function RowActions({ article, busyId, onTrash, onRestore, onDelete }) {
   return (
     <div className="flex items-center justify-end gap-2">
       <Link
-        to={`/posts/${article.id}/edit`}
+        to={`/studio/artikel/${article.id}/edit`}
         className="focus-ring inline-flex size-11 cursor-pointer items-center justify-center rounded-xl border border-border bg-bg-secondary text-text-secondary transition-colors duration-200 hover:bg-bg-hover hover:text-text-primary"
         aria-label={`Edit ${article.title}`}
         title="Edit artikel"
@@ -77,7 +77,7 @@ function DesktopTable({ articles, busyId, showAuthor, onTrash, onRestore, onDele
             <tr key={article.id} className="group transition-colors duration-200 hover:bg-bg-hover/65">
               <td className="max-w-xl px-5 py-4">
                 <Link
-                  to={`/posts/${article.id}/edit`}
+                  to={`/studio/artikel/${article.id}/edit`}
                   className="focus-ring line-clamp-2 cursor-pointer rounded font-semibold leading-6 text-text-primary transition-colors duration-200 hover:text-accent-strong"
                 >
                   {article.title}
@@ -119,7 +119,7 @@ function MobileCards({ articles, busyId, onTrash, onRestore, onDelete }) {
             <span className="text-xs tabular-nums text-text-tertiary">#{article.id}</span>
           </div>
           <Link
-            to={`/posts/${article.id}/edit`}
+            to={`/studio/artikel/${article.id}/edit`}
             className="focus-ring mt-4 block cursor-pointer rounded font-display text-xl font-semibold leading-tight text-text-primary"
           >
             {article.title}
