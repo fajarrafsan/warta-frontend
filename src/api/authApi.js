@@ -39,3 +39,45 @@ export async function getMe() {
     return response.data.data
   })
 }
+
+// refreshUser memuat ulang data akun (misalnya status verifikasi email) ke
+// sesi yang tersimpan.
+export async function refreshUser() {
+  const user = await getMe()
+  const session = getSession()
+  if (session) setSession({ ...session, user })
+  return user
+}
+
+// Token verifikasi hanya berlaku sekali, sedangkan React StrictMode menjalankan
+// efek dua kali saat development. Permintaan untuk token yang sama dibagi.
+const verifying = new Map()
+
+export function verifyEmail(token) {
+  if (!verifying.has(token)) {
+    verifying.set(token, call(async () => {
+      const response = await authClient.post('/api/v1/auth/verify-email', { token })
+      const user = response.data.data
+      const session = getSession()
+      if (session?.user?.id === user.id) setSession({ ...session, user })
+      return user
+    }).catch((error) => {
+      // Hanya hasil yang berhasil disimpan; kegagalan jaringan boleh dicoba lagi.
+      if (!error.status) verifying.delete(token)
+      throw error
+    }))
+  }
+  return verifying.get(token)
+}
+
+export async function resendVerification() {
+  return call(() => api.post('/api/v1/auth/resend-verification'))
+}
+
+export async function forgotPassword(email) {
+  return call(() => authClient.post('/api/v1/auth/forgot-password', { email }))
+}
+
+export async function resetPassword(token, newPassword) {
+  return call(() => authClient.post('/api/v1/auth/reset-password', { token, new_password: newPassword }))
+}

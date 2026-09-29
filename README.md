@@ -32,6 +32,17 @@ Pembaca bisa melaporkan komentar orang lain (spam, kasar, atau alasan lain).
 Pesan dari aturan anti-spam backend, seperti batas tautan atau kiriman ganda,
 tampil langsung di form komentar.
 
+**Akun:** daftar, masuk, lupa password lewat tautan email, dan verifikasi
+email. Akun yang emailnya belum terverifikasi melihat pemberitahuan di kolom
+komentar beserta tombol kirim ulang, bila backend mewajibkan verifikasi.
+
+**SEO dan pratinjau link:** setiap halaman publik memasang judul, deskripsi,
+URL kanonis, serta tag Open Graph dan Twitter (judul, ringkasan, dan gambar
+sampul artikel). Saat tautan artikel dibagikan ke WhatsApp, Facebook, X,
+Telegram, atau Slack, pratinjaunya menampilkan judul dan sampul artikel itu.
+`/sitemap.xml`, `/feed.xml` (RSS), dan `/robots.txt` tersedia di domain
+frontend.
+
 Login memakai access token yang diperbarui otomatis dengan refresh token.
 Menu dan halaman mengikuti role: pembaca bisa menyukai, menyimpan, dan
 berkomentar; penulis mendapat ruang redaksi; admin mendapat semuanya.
@@ -89,6 +100,26 @@ Variables di Vercel lalu redeploy.
 `vercel.json` berisi rewrite ke `index.html` supaya route seperti `/posts/new`
 tetap terbuka saat diakses langsung, bukan menghasilkan 404.
 
+### Pratinjau link, sitemap, dan RSS
+
+Karena aplikasi ini SPA, HTML awalnya belum berisi judul dan gambar artikel,
+sedangkan crawler pratinjau link tidak menjalankan JavaScript. `middleware.js`
+(Vercel Routing Middleware) menangani ini:
+
+- Permintaan `/artikel/...` dari crawler (WhatsApp, Facebook, X, Telegram,
+  Slack, LinkedIn, Discord, Google, Bing, dan lain-lain) mengambil artikelnya
+  dari backend lalu memasang metadata ke `index.html`. Pengunjung biasa
+  langsung mendapat SPA tanpa langkah tambahan. Bila backend lambat (lebih
+  dari 3 detik) atau artikel tidak ada, crawler tetap mendapat halaman biasa.
+- `/sitemap.xml` dan `/feed.xml` diteruskan dari backend, dan `/robots.txt`
+  dibuat dengan alamat sitemap domain ini. Halaman studio dan halaman bertoken
+  ditutup dari mesin pencari.
+
+Middleware membaca alamat backend dari `API_URL`, atau `VITE_API_URL` bila
+kosong. Di backend, isi `APP_URL` dengan alamat frontend supaya tautan di
+sitemap, RSS, dan email mengarah ke sini. Saat development, Vite meneruskan
+`/sitemap.xml` dan `/feed.xml` ke backend lokal.
+
 ## Scripts
 
 ```bash
@@ -109,6 +140,9 @@ pnpm test      # unit/component test
 | `/cari?q=` | publik | pencarian |
 | `/tersimpan` | login | artikel yang disimpan |
 | `/login`, `/register` | publik | masuk dan daftar |
+| `/forgot-password` | publik | minta tautan reset password |
+| `/reset-password?token=` | publik | buat password baru dari tautan email |
+| `/verify-email?token=` | publik | verifikasi email dari tautan email |
 | `/studio` | penulis, admin | dashboard |
 | `/studio/artikel`, `/studio/tulis`, `/studio/artikel/:id/edit` | penulis, admin | kelola dan tulis artikel |
 | `/studio/kategori`, `/studio/pengguna`, `/studio/moderasi` | admin | kelola kategori, role, dan komentar yang dilaporkan |
@@ -124,4 +158,6 @@ antar tab. Beberapa permintaan yang bersamaan mendapat 401 hanya memicu satu
 kali refresh, karena refresh token di backend hanya berlaku sekali.
 
 Perubahan role oleh admin berlaku setelah access token pengguna itu diperbarui
-(paling lama 15 menit) atau setelah ia login ulang.
+(paling lama 15 menit) atau setelah ia login ulang. Data akun lainnya,
+seperti status verifikasi email, dimuat ulang dari `/api/v1/me` setiap kali
+aplikasi dibuka.

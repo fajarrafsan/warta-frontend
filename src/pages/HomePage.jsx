@@ -7,7 +7,7 @@ import ErrorState from '../components/ui/ErrorState.jsx'
 import Pagination from '../components/ui/Pagination.jsx'
 import useArticles from '../hooks/useArticles.js'
 import useAuth from '../hooks/useAuth.js'
-import useDocumentTitle from '../hooks/useDocumentTitle.js'
+import usePageMeta from '../hooks/usePageMeta.js'
 import { formatCount } from '../utils/articleUtils.js'
 
 const PAGE_SIZE = 12
@@ -62,7 +62,11 @@ export default function HomePage() {
   const { canWrite } = useAuth()
   const popularMode = searchParams.get('sort') === 'popular'
   const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1', 10) || 1)
-  useDocumentTitle(popularMode ? 'Terpopuler' : 'Kabar terkini')
+  usePageMeta({
+    title: popularMode ? 'Terpopuler' : 'Kabar terkini',
+    description: 'Kabar, tulisan, dan cerita terbaru dari para penulis Warta.',
+    path: popularMode ? '/?sort=popular' : '/',
+  })
 
   const params = useMemo(
     () => ({ page, perPage: PAGE_SIZE, sort: popularMode ? 'popular' : 'newest' }),

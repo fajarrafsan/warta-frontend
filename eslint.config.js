@@ -29,4 +29,9 @@ export default [
       ],
     },
   },
+  {
+    // Berjalan di Vercel, bukan di browser.
+    files: ['middleware.js'],
+    languageOptions: { globals: { ...globals.browser, process: 'readonly' } },
+  },
 ]

@@ -12,6 +12,9 @@ const ArticlePage = lazy(() => import('./pages/ArticlePage.jsx'))
 const ListingPage = lazy(() => import('./pages/ListingPage.jsx'))
 const BookmarksPage = lazy(() => import('./pages/ListingPage.jsx').then((module) => ({ default: module.BookmarksPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage.jsx'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage.jsx'))
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage.jsx'))
 const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'))
 const AllPostsPage = lazy(() => import('./pages/AllPostsPage.jsx'))
 const ArticleEditorPage = lazy(() => import('./pages/ArticleEditorPage.jsx'))
@@ -39,6 +42,9 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<AuthPage mode="login" />} />
           <Route path="/register" element={<AuthPage mode="register" />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
 
           <Route element={<PublicLayout />}>
             <Route index element={<HomePage />} />

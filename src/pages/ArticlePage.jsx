@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { Eye, Pencil } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { recordView } from '../api/articleApi.js'
+import { assetUrl } from '../api/client.js'
 import ArticleActions from '../components/articles/ArticleActions.jsx'
 import CommentsSection from '../components/articles/CommentsSection.jsx'
 import Cover from '../components/articles/Cover.jsx'
@@ -12,7 +13,8 @@ import ErrorState from '../components/ui/ErrorState.jsx'
 import useArticle from '../hooks/useArticle.js'
 import useArticles from '../hooks/useArticles.js'
 import useAuth from '../hooks/useAuth.js'
-import useDocumentTitle from '../hooks/useDocumentTitle.js'
+import usePageMeta from '../hooks/usePageMeta.js'
+import { absoluteUrl, articleMeta } from '../seo/meta.js'
 import { formatArticleDate, formatCount, readingLabel } from '../utils/articleUtils.js'
 
 function Unavailable() {
@@ -60,7 +62,10 @@ export default function ArticlePage() {
   const { ref } = useParams()
   const { user, isAdmin } = useAuth()
   const { article, loading, error, refresh } = useArticle(ref)
-  useDocumentTitle(article?.title || 'Artikel')
+  // Draft tidak untuk diindeks; hanya penulis dan admin yang bisa melihatnya.
+  usePageMeta(article
+    ? { ...articleMeta(article, absoluteUrl(assetUrl('/'), window.location.origin)), noindex: article.status !== 'published' }
+    : { title: 'Artikel', noindex: !loading })
 
   const articleId = article?.id
   const published = article?.status === 'published'

@@ -6,13 +6,14 @@ import { createComment, deleteComment, listComments } from '../../api/commentApi
 import useAsync from '../../hooks/useAsync.js'
 import useAuth from '../../hooks/useAuth.js'
 import { formatArticleDate } from '../../utils/articleUtils.js'
+import VerifyEmailNotice from '../auth/VerifyEmailNotice.jsx'
 import Button from '../ui/Button.jsx'
 import ReportMenu from './ReportMenu.jsx'
 
 const PER_PAGE = 20
 
 export default function CommentsSection({ article }) {
-  const { user, isAdmin } = useAuth()
+  const { user, isAdmin, needsVerification, refreshUser } = useAuth()
   const location = useLocation()
   const [pages, setPages] = useState(1)
   const [body, setBody] = useState('')
@@ -48,6 +49,9 @@ export default function CommentsSection({ article }) {
       setBody('')
       comments.refresh()
     } catch (submitError) {
+      // Sesi di browser ini mungkin belum tahu statusnya; muat ulang supaya
+      // pemberitahuan verifikasi tampil.
+      if (submitError.code === 'email_not_verified') refreshUser().catch(() => {})
       setError(submitError.fields?.body || submitError.message)
     } finally {
       setSending(false)
@@ -76,6 +80,8 @@ export default function CommentsSection({ article }) {
 
       {article.status !== 'published' ? (
         <p className="mt-4 text-sm text-text-secondary">Komentar dibuka setelah artikel terbit.</p>
+      ) : user && needsVerification ? (
+        <VerifyEmailNotice />
       ) : user ? (
         <form onSubmit={submit} className="mt-6" noValidate>
           <label htmlFor="comment-body" className="sr-only">Tulis komentar</label>
@@ -111,7 +117,7 @@ export default function CommentsSection({ article }) {
       <ol className="mt-8 space-y-5">
         {items.map((comment) => {
           const canDelete = user && (user.id === comment.author.id || isAdmin)
-          const canReport = user && user.id !== comment.author.id
+          const canReport = user && !needsVerification && user.id !== comment.author.id
           return (
             <li key={comment.id} className="rounded-2xl border border-border bg-bg-secondary p-5">
               <div className="flex items-start justify-between gap-3">

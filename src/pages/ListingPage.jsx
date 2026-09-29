@@ -10,6 +10,7 @@ import useArticles from '../hooks/useArticles.js'
 import useAsync from '../hooks/useAsync.js'
 import useCategories from '../hooks/useCategories.js'
 import useDocumentTitle from '../hooks/useDocumentTitle.js'
+import usePageMeta from '../hooks/usePageMeta.js'
 
 const PAGE_SIZE = 12
 
@@ -66,7 +67,15 @@ export default function ListingPage({ mode }) {
   const title = mode === 'category' ? (category?.name || slug)
     : mode === 'tag' ? `#${slug}`
       : q ? `“${q}”` : 'Cari artikel'
-  useDocumentTitle(mode === 'search' ? 'Cari' : title)
+  usePageMeta(mode === 'category' ? {
+    title,
+    description: category?.description || `Artikel dalam kategori ${title} di Warta.`,
+    path: `/kategori/${encodeURIComponent(slug)}`,
+  } : mode === 'tag' ? {
+    title,
+    description: `Artikel bertag ${slug} di Warta.`,
+    path: `/tag/${encodeURIComponent(slug)}`,
+  } : { title: 'Cari', noindex: true })
 
   function changePage(nextPage) {
     const next = new URLSearchParams(searchParams)

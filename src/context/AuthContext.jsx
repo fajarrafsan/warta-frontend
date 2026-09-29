@@ -8,6 +8,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => subscribeSession((session) => setUser(session?.user ?? null)), [])
 
+  // Data akun di sesi bisa usang, misalnya email diverifikasi di perangkat
+  // lain. Dimuat ulang sekali saat aplikasi dibuka.
+  useEffect(() => {
+    if (getSession()) authApi.refreshUser().catch(() => {})
+  }, [])
+
   const logout = useCallback(() => authApi.logout(), [])
 
   const value = useMemo(() => {
@@ -16,9 +22,13 @@ export function AuthProvider({ children }) {
       user,
       isAuthenticated: Boolean(user),
       isAdmin: role === 'admin',
+      // false hanya bila backend menyatakan belum terverifikasi; sesi lama
+      // tanpa field ini tidak dianggap belum terverifikasi.
+      needsVerification: user?.email_verified === false,
       canWrite: role === 'admin' || role === 'author',
       login: authApi.login,
       register: authApi.register,
+      refreshUser: authApi.refreshUser,
       logout,
     }
   }, [user, logout])

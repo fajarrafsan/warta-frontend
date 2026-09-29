@@ -1,12 +1,7 @@
-import { useEffect } from 'react'
+import usePageMeta from './usePageMeta.js'
 
+// useDocumentTitle untuk halaman yang tidak perlu muncul di mesin pencari:
+// studio, akun, dan halaman bertoken.
 export default function useDocumentTitle(title) {
-  useEffect(() => {
-    document.title = `${title} | Warta`
-
-    return () => {
-      document.title = 'Warta'
-    }
-  }, [title])
+  usePageMeta({ title, noindex: true })
 }
-
