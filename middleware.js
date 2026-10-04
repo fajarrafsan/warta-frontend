@@ -8,10 +8,10 @@
 // membuat robots.txt. Alamat backend dibaca dari API_URL, atau VITE_API_URL
 // yang juga dipakai saat build.
 import { next } from '@vercel/functions'
-import { articleMeta, injectHead, isPreviewBot, robotsTxt } from './src/seo/meta.js'
+import { articleMeta, authorMeta, injectHead, isPreviewBot, robotsTxt } from './src/seo/meta.js'
 
 export const config = {
-  matcher: ['/artikel/:path*', '/sitemap.xml', '/feed.xml', '/robots.txt'],
+  matcher: ['/artikel/:path*', '/penulis/:path*', '/sitemap.xml', '/feed.xml', '/robots.txt'],
 }
 
 const TIMEOUT_MS = 3000
@@ -41,20 +41,25 @@ export default async function middleware(request) {
   // Bila backend lambat atau artikel tidak ada, crawler tetap mendapat
   // halaman biasa.
   try {
-    const ref = decodeURIComponent(url.pathname.slice('/artikel/'.length).split('/')[0])
+    // /artikel/{slug} atau /penulis/{id}.
+    const [, section, rawRef] = url.pathname.split('/')
+    const ref = decodeURIComponent(rawRef || '')
     if (!ref) return next()
+    const resource = section === 'penulis'
+      ? { api: 'authors', meta: authorMeta }
+      : { api: 'articles', meta: articleMeta }
 
-    const [articleResponse, pageResponse] = await Promise.all([
-      fetch(`${backend}/api/v1/articles/${encodeURIComponent(ref)}`, {
+    const [dataResponse, pageResponse] = await Promise.all([
+      fetch(`${backend}/api/v1/${resource.api}/${encodeURIComponent(ref)}`, {
         headers: { Accept: 'application/json' },
         signal: AbortSignal.timeout(TIMEOUT_MS),
       }),
       fetch(new URL('/index.html', url), { signal: AbortSignal.timeout(TIMEOUT_MS) }),
     ])
-    if (!articleResponse.ok || !pageResponse.ok) return next()
+    if (!dataResponse.ok || !pageResponse.ok) return next()
 
-    const article = (await articleResponse.json()).data
-    const html = injectHead(await pageResponse.text(), articleMeta(article, backend), url.origin)
+    const data = (await dataResponse.json()).data
+    const html = injectHead(await pageResponse.text(), resource.meta(data, backend), url.origin)
     return new Response(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',

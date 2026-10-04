@@ -15,6 +15,13 @@ React JSX, Vite, Tailwind CSS v4, dan pnpm.
   waktu baca, jumlah dibaca, tombol suka, simpan, dan salin tautan, komentar,
   serta artikel lain di kategori yang sama.
 - Halaman per kategori dan tag, pencarian, dan halaman Tersimpan.
+- Pencarian dengan saran saat mengetik (artikel, penulis, kategori, tag) yang
+  bisa dipakai dengan keyboard; hasilnya menyorot kata yang dicari, membawa
+  cuplikan di sekitar kata itu, dan bisa diurutkan menurut relevansi, terbaru,
+  atau terpopuler.
+- Profil publik penulis (foto, bio, angka, dan tulisannya), tombol Ikuti, dan
+  halaman Mengikuti berisi tulisan terbaru dari penulis yang diikuti.
+- Halaman Akun untuk mengubah nama, bio, foto, dan password.
 
 **Ruang redaksi** (`/studio`) untuk penulis dan admin:
 
@@ -24,6 +31,10 @@ React JSX, Vite, Tailwind CSS v4, dan pnpm.
 - Daftar artikel per status dengan pencarian dan paging.
 - Editor Markdown dengan toolbar (subjudul, tebal, miring, tautan, kutipan,
   daftar, kode), sisip gambar, pratinjau langsung, dan upload gambar sampul.
+- Jadwal terbit: pilih waktu, artikel terbit otomatis. Tab Scheduled
+  menampilkan kapan setiap artikel akan terbit.
+- Riwayat revisi di editor: daftar semua versi beserta penyuntingnya,
+  perbedaan per baris dengan versi sekarang, dan tombol pulihkan.
 - Kelola kategori dan role pengguna (admin).
 - Moderasi komentar (admin): komentar yang dilaporkan pembaca atau
   disembunyikan otomatis, dengan pilihan tampilkan, sembunyikan, atau hapus.
@@ -66,7 +77,19 @@ pnpm dev
 Buka `http://localhost:5173` dan masuk dengan akun admin bawaan backend
 (`admin@warta.local` / `admin12345` pada `docker-compose.yml`).
 
-Alur pertama kali:
+Supaya langsung ada isi untuk dijelajahi, isi backend dengan data contoh:
+
+```bash
+cd warta-backend
+docker compose exec api warta-seed
+```
+
+Perintah itu membuat penulis lengkap dengan foto, 12 artikel bersampul,
+komentar, pengikut, dan grafik dashboard yang terisi. Semua akun contoh
+memakai password `warta12345`, misalnya penulis `dimas@warta.local` dan
+pembaca `laras@warta.local`.
+
+Alur pertama kali tanpa data contoh:
 
 1. Masuk sebagai admin, buat kategori di **Ruang redaksi → Kategori**.
 2. Daftar akun baru; akun baru selalu berperan pembaca.
@@ -106,7 +129,7 @@ Karena aplikasi ini SPA, HTML awalnya belum berisi judul dan gambar artikel,
 sedangkan crawler pratinjau link tidak menjalankan JavaScript. `middleware.js`
 (Vercel Routing Middleware) menangani ini:
 
-- Permintaan `/artikel/...` dari crawler (WhatsApp, Facebook, X, Telegram,
+- Permintaan `/artikel/...` dan `/penulis/...` dari crawler (WhatsApp, Facebook, X, Telegram,
   Slack, LinkedIn, Discord, Google, Bing, dan lain-lain) mengambil artikelnya
   dari backend lalu memasang metadata ke `index.html`. Pengunjung biasa
   langsung mendapat SPA tanpa langkah tambahan. Bila backend lambat (lebih
@@ -139,6 +162,9 @@ pnpm test      # unit/component test
 | `/kategori/:slug`, `/tag/:slug` | publik | artikel per kategori atau tag |
 | `/cari?q=` | publik | pencarian |
 | `/tersimpan` | login | artikel yang disimpan |
+| `/penulis/:id` | publik | profil penulis dan tulisannya |
+| `/mengikuti` | login | tulisan dari penulis yang diikuti |
+| `/akun` | login | nama, bio, foto, dan password |
 | `/login`, `/register` | publik | masuk dan daftar |
 | `/forgot-password` | publik | minta tautan reset password |
 | `/reset-password?token=` | publik | buat password baru dari tautan email |

@@ -10,6 +10,9 @@ import RouteLoading from './components/ui/RouteLoading.jsx'
 const HomePage = lazy(() => import('./pages/HomePage.jsx'))
 const ArticlePage = lazy(() => import('./pages/ArticlePage.jsx'))
 const ListingPage = lazy(() => import('./pages/ListingPage.jsx'))
+const AuthorPage = lazy(() => import('./pages/AuthorPage.jsx'))
+const FollowingPage = lazy(() => import('./pages/FollowingPage.jsx'))
+const AccountPage = lazy(() => import('./pages/AccountPage.jsx'))
 const BookmarksPage = lazy(() => import('./pages/ListingPage.jsx').then((module) => ({ default: module.BookmarksPage })))
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'))
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage.jsx'))
@@ -53,6 +56,9 @@ export default function App() {
             <Route path="/tag/:slug" element={<ListingPage mode="tag" />} />
             <Route path="/cari" element={<ListingPage mode="search" />} />
             <Route path="/tersimpan" element={<RequireAuth><BookmarksPage /></RequireAuth>} />
+            <Route path="/penulis/:id" element={<AuthorPage />} />
+            <Route path="/mengikuti" element={<RequireAuth><FollowingPage /></RequireAuth>} />
+            <Route path="/akun" element={<RequireAuth><AccountPage /></RequireAuth>} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
 

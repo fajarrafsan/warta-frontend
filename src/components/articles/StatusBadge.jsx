@@ -1,10 +1,15 @@
-import { CircleCheck, FileClock, Trash2 } from 'lucide-react'
+import { CalendarClock, CircleCheck, FileClock, Trash2 } from 'lucide-react'
 
 const variants = {
   published: {
     label: 'Published',
     icon: CircleCheck,
     className: 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300',
+  },
+  scheduled: {
+    label: 'Scheduled',
+    icon: CalendarClock,
+    className: 'border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300',
   },
   draft: {
     label: 'Draft',

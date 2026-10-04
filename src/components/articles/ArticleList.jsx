@@ -59,6 +59,15 @@ function RowActions({ article, busyId, onTrash, onRestore, onDelete }) {
   )
 }
 
+function ScheduledAt({ article }) {
+  if (article.status !== 'scheduled' || !article.scheduled_at) return null
+  return (
+    <p className="mt-1.5 whitespace-nowrap text-xs text-text-tertiary">
+      Terbit <time dateTime={article.scheduled_at}>{formatArticleDate(article.scheduled_at, { hour: '2-digit', minute: '2-digit' })}</time>
+    </p>
+  )
+}
+
 function DesktopTable({ articles, busyId, showAuthor, onTrash, onRestore, onDelete }) {
   return (
     <div className="hidden overflow-x-auto md:block">
@@ -88,7 +97,10 @@ function DesktopTable({ articles, busyId, showAuthor, onTrash, onRestore, onDele
                 </p>
               </td>
               <td className="px-5 py-4 text-sm text-text-secondary">{article.category.name}</td>
-              <td className="px-5 py-4"><StatusBadge status={article.status} /></td>
+              <td className="px-5 py-4">
+                <StatusBadge status={article.status} />
+                <ScheduledAt article={article} />
+              </td>
               <td className="whitespace-nowrap px-5 py-4 text-sm text-text-secondary">
                 {formatArticleDate(article.updated_at)}
               </td>
@@ -115,7 +127,10 @@ function MobileCards({ articles, busyId, onTrash, onRestore, onDelete }) {
       {articles.map((article) => (
         <article key={article.id} className="p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
-            <StatusBadge status={article.status} />
+            <div>
+              <StatusBadge status={article.status} />
+              <ScheduledAt article={article} />
+            </div>
             <span className="text-xs tabular-nums text-text-tertiary">#{article.id}</span>
           </div>
           <Link

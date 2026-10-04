@@ -1,5 +1,5 @@
 import { useDeferredValue, useMemo, useState } from 'react'
-import { FileClock, FilePlus2, Search, Trash2, CheckCircle2 } from 'lucide-react'
+import { CalendarClock, FileClock, FilePlus2, Search, Trash2, CheckCircle2 } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { changeArticleStatus, deleteArticle, listArticles } from '../api/articleApi.js'
@@ -18,6 +18,7 @@ const PAGE_SIZE = 10
 
 const statusIcons = {
   published: CheckCircle2,
+  scheduled: CalendarClock,
   draft: FileClock,
   archived: Trash2,
 }
@@ -79,7 +80,7 @@ export default function AllPostsPage() {
     setBusyId(article.id)
 
     try {
-      await changeArticleStatus(article.id, nextStatus)
+      await changeArticleStatus(article.id, nextStatus, article.scheduled_at)
       refreshAll()
       if (successMessage) toast.success(successMessage)
     } catch (mutationError) {

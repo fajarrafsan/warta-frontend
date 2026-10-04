@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Bookmark, Eye, FilePlus2, FileText, Heart, MessageSquare, Table2 } from 'lucide-react'
+import { Bookmark, Eye, FilePlus2, FileText, Heart, MessageSquare, Table2, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { getStats } from '../api/articleApi.js'
 import { RankedBars, TimeSeriesChart } from '../components/studio/charts.jsx'
@@ -121,17 +121,27 @@ export default function DashboardPage() {
       {stats.error ? (
         <ErrorState error={stats.error} onRetry={stats.refresh} />
       ) : !data ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5" role="status" aria-label="Memuat statistik">
-          {Array.from({ length: 5 }, (_, index) => <div key={index} className="h-32 animate-pulse rounded-2xl bg-bg-secondary" />)}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6" role="status" aria-label="Memuat statistik">
+          {Array.from({ length: 6 }, (_, index) => <div key={index} className="h-32 animate-pulse rounded-2xl bg-bg-secondary" />)}
         </div>
       ) : (
         <>
-          <div className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-5 transition-opacity ${stats.loading ? 'opacity-60' : ''}`}>
-            <StatTile icon={FileText} label="Artikel terbit" value={data.totals.published} detail={`${data.totals.draft} draft · ${data.totals.archived} di trash`} />
+          <div className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 transition-opacity ${stats.loading ? 'opacity-60' : ''}`}>
+            <StatTile
+              icon={FileText}
+              label="Artikel terbit"
+              value={data.totals.published}
+              detail={[
+                data.totals.scheduled > 0 && `${data.totals.scheduled} terjadwal`,
+                `${data.totals.draft} draft`,
+                `${data.totals.archived} di trash`,
+              ].filter(Boolean).join(' · ')}
+            />
             <StatTile icon={Eye} label="Total dibaca" value={data.totals.views} detail={`${formatCount(sum('views'))} dalam ${days} hari`} />
             <StatTile icon={Heart} label="Suka" value={data.totals.likes} />
             <StatTile icon={MessageSquare} label="Komentar" value={data.totals.comments} detail={`${formatCount(sum('comments'))} dalam ${days} hari`} />
             <StatTile icon={Bookmark} label="Disimpan pembaca" value={data.totals.bookmarks} />
+            <StatTile icon={Users} label={data.scope === 'all' ? 'Relasi ikuti' : 'Pengikut'} value={data.totals.followers} />
           </div>
 
           {asTable ? (

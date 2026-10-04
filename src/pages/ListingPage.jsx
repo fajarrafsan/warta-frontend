@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Bookmark, Search } from 'lucide-react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { listBookmarks } from '../api/articleApi.js'
-import StoryCard from '../components/articles/StoryCard.jsx'
+import ArticleGrid from '../components/articles/ArticleGrid.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import ErrorState from '../components/ui/ErrorState.jsx'
 import Pagination from '../components/ui/Pagination.jsx'
@@ -11,23 +11,38 @@ import useAsync from '../hooks/useAsync.js'
 import useCategories from '../hooks/useCategories.js'
 import useDocumentTitle from '../hooks/useDocumentTitle.js'
 import usePageMeta from '../hooks/usePageMeta.js'
+import { searchTerms } from '../utils/search.js'
 
 const PAGE_SIZE = 12
 
-function Grid({ articles, loading, error, onRetry, empty }) {
-  if (loading) {
-    return (
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Memuat artikel">
-        {Array.from({ length: 6 }, (_, index) => <div key={index} className="aspect-[4/3] animate-pulse rounded-2xl bg-bg-soft" />)}
-      </div>
-    )
-  }
-  if (error) return <ErrorState error={error} onRetry={onRetry} />
-  if (articles.length === 0) return empty
+const SEARCH_SORTS = [
+  { value: '', label: 'Paling relevan' },
+  { value: 'newest', label: 'Terbaru' },
+  { value: 'popular', label: 'Terpopuler' },
+]
+
+function SearchForm({ initial, onSubmit }) {
+  const [value, setValue] = useState(initial)
   return (
-    <div className="grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-      {articles.map((article) => <StoryCard key={article.id} article={article} />)}
-    </div>
+    <form
+      onSubmit={(event) => {
+        event.preventDefault()
+        onSubmit(value.trim())
+      }}
+      role="search"
+      className="relative mt-6 max-w-xl"
+    >
+      <label htmlFor="search-page" className="sr-only">Kata kunci</label>
+      <Search aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary" />
+      <input
+        id="search-page"
+        type="search"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        placeholder="Kata kunci di judul atau isi"
+        className="focus-ring min-h-12 w-full rounded-full border border-border bg-bg-secondary pl-11 pr-4 text-base text-text-primary placeholder:text-text-tertiary"
+      />
+    </form>
   )
 }
 
@@ -50,15 +65,18 @@ export default function ListingPage({ mode }) {
   const { categories } = useCategories()
   const q = (searchParams.get('q') || '').trim()
   const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1', 10) || 1)
-  const [draft, setDraft] = useState(q)
+  const sort = SEARCH_SORTS.some((option) => option.value === searchParams.get('sort')) ? searchParams.get('sort') : ''
 
   const params = useMemo(() => ({
     category: mode === 'category' ? slug : '',
     tag: mode === 'tag' ? slug : '',
     q: mode === 'search' ? q : '',
+    // Tanpa sort, pencarian diurutkan menurut relevansi oleh backend.
+    sort: mode === 'search' ? sort : '',
     page,
     perPage: PAGE_SIZE,
-  }), [mode, slug, q, page])
+  }), [mode, slug, q, sort, page])
+  const terms = useMemo(() => (mode === 'search' ? searchTerms(q) : undefined), [mode, q])
 
   const skip = mode === 'search' && !q
   const { articles, meta, loading, error, refresh } = useArticles(skip ? { ...params, perPage: 1 } : params)
@@ -84,9 +102,12 @@ export default function ListingPage({ mode }) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  function submitSearch(event) {
-    event.preventDefault()
-    setSearchParams(draft.trim() ? { q: draft.trim() } : {})
+  function submitSearch(value) {
+    setSearchParams(value ? { q: value, ...(sort && { sort }) } : {})
+  }
+
+  function changeSort(value) {
+    setSearchParams({ q, ...(value && { sort: value }) })
   }
 
   return (
@@ -98,28 +119,38 @@ export default function ListingPage({ mode }) {
           : mode === 'search' && q && !loading ? `${meta.total} artikel ditemukan.` : undefined}
       >
         {mode === 'search' && (
-          <form onSubmit={submitSearch} role="search" className="relative mt-6 max-w-xl">
-            <label htmlFor="search-page" className="sr-only">Kata kunci</label>
-            <Search aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary" />
-            <input
-              id="search-page"
-              type="search"
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Kata kunci di judul atau isi"
-              className="focus-ring min-h-12 w-full rounded-full border border-border bg-bg-secondary pl-11 pr-4 text-base text-text-primary placeholder:text-text-tertiary"
-            />
-          </form>
+          <>
+            {/* key: isian ikut berganti saat pencarian dimulai dari header. */}
+            <SearchForm key={q} initial={q} onSubmit={submitSearch} />
+            {q && (
+              <div className="mt-5 flex flex-wrap rounded-xl border border-border bg-bg-secondary p-1 sm:inline-flex" role="group" aria-label="Urutkan hasil">
+                {SEARCH_SORTS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => changeSort(option.value)}
+                    aria-pressed={sort === option.value}
+                    className={`focus-ring min-h-9 cursor-pointer rounded-lg px-4 text-sm font-semibold ${sort === option.value ? 'bg-brand text-brand-contrast' : 'text-text-secondary hover:text-text-primary'}`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </Header>
 
       {!skip && (
-        <Grid
+        <ArticleGrid
           articles={articles}
           loading={loading}
           error={error}
           onRetry={refresh}
-          empty={<EmptyState title="Belum ada artikel" description="Belum ada artikel terbit yang cocok." compact />}
+          highlight={terms}
+          empty={<EmptyState title="Belum ada artikel" description={mode === 'search'
+            ? 'Coba kata lain atau lebih sedikit kata; semua kata harus ada di artikel.'
+            : 'Belum ada artikel terbit yang cocok.'} compact />}
         />
       )}
 
@@ -140,7 +171,7 @@ export function BookmarksPage() {
   return (
     <div className="animate-fade-up space-y-10">
       <Header eyebrow="Koleksi pribadi" title="Tersimpan" description="Artikel yang kamu simpan untuk dibaca nanti." />
-      <Grid
+      <ArticleGrid
         articles={articles}
         loading={result.loading && !result.data}
         error={result.error}

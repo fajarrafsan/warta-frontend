@@ -73,4 +73,31 @@ describe('ArticleForm', () => {
     expect(await screen.findByText('kategori tidak ditemukan')).toBeInTheDocument()
     expect(onSubmit.mock.calls[0][0].status).toBe('published')
   })
+
+  it('menjadwalkan terbit dengan waktu di masa depan', async () => {
+    const user = userEvent.setup()
+    const onSubmit = renderForm(vi.fn().mockResolvedValue(undefined))
+
+    await fillValidForm(user)
+    await user.click(screen.getByLabelText('Jadwalkan terbit'))
+    expect(screen.queryByRole('button', { name: 'Publish' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Jadwalkan' }))
+    expect(await screen.findByText('Pilih waktu terbit.')).toBeInTheDocument()
+    expect(onSubmit).not.toHaveBeenCalled()
+
+    const input = screen.getByLabelText('Waktu terbit')
+    await user.type(input, '2020-01-01T08:00')
+    await user.click(screen.getByRole('button', { name: 'Jadwalkan' }))
+    expect(await screen.findByText('Waktu terbit harus di masa depan.')).toBeInTheDocument()
+
+    await user.clear(input)
+    await user.type(input, '2099-06-01T08:30')
+    await user.click(screen.getByRole('button', { name: 'Jadwalkan' }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled())
+    const payload = onSubmit.mock.calls[0][0]
+    expect(payload.status).toBe('scheduled')
+    expect(new Date(payload.scheduled_at).getFullYear()).toBe(2099)
+    expect(new Date(payload.scheduled_at).getHours()).toBe(8)
+  })
 })

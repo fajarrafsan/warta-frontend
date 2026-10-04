@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { Bookmark, LayoutDashboard, LogOut, Search, X } from 'lucide-react'
+import { Bookmark, LayoutDashboard, LogOut, Search, Settings, UserRound, Users, X } from 'lucide-react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import useAuth from '../../hooks/useAuth.js'
 import useCategories from '../../hooks/useCategories.js'
 import { ROLE_LABELS } from '../../utils/articleUtils.js'
+import Avatar from '../ui/Avatar.jsx'
+import SearchCombobox from './SearchCombobox.jsx'
 import ThemeToggle from '../ui/ThemeToggle.jsx'
 
 function Wordmark() {
@@ -62,9 +64,9 @@ function AccountMenu() {
         aria-expanded={open}
         aria-haspopup="menu"
         aria-label={`Menu akun ${user.name}`}
-        className="focus-ring grid size-10 cursor-pointer place-items-center rounded-full bg-brand text-sm font-bold uppercase text-brand-contrast"
+        className="focus-ring cursor-pointer rounded-full"
       >
-        {user.name.charAt(0)}
+        <Avatar name={user.name} src={user.avatar_url} />
       </button>
       {open && (
         <div role="menu" className="animate-fade-up absolute right-0 z-40 mt-2 w-60 rounded-2xl border border-border bg-bg-secondary p-2 shadow-float">
@@ -78,8 +80,19 @@ function AccountMenu() {
               <LayoutDashboard aria-hidden="true" size={17} /> Ruang redaksi
             </Link>
           )}
+          {canWrite && (
+            <Link role="menuitem" to={`/penulis/${user.id}`} onClick={() => setOpen(false)} className={itemClass}>
+              <UserRound aria-hidden="true" size={17} /> Profil publik
+            </Link>
+          )}
+          <Link role="menuitem" to="/mengikuti" onClick={() => setOpen(false)} className={itemClass}>
+            <Users aria-hidden="true" size={17} /> Mengikuti
+          </Link>
           <Link role="menuitem" to="/tersimpan" onClick={() => setOpen(false)} className={itemClass}>
             <Bookmark aria-hidden="true" size={17} /> Tersimpan
+          </Link>
+          <Link role="menuitem" to="/akun" onClick={() => setOpen(false)} className={itemClass}>
+            <Settings aria-hidden="true" size={17} /> Akun
           </Link>
           <button role="menuitem" type="button" onClick={signOut} className={itemClass}>
             <LogOut aria-hidden="true" size={17} /> Keluar
@@ -87,35 +100,6 @@ function AccountMenu() {
         </div>
       )}
     </div>
-  )
-}
-
-function SearchBox({ onDone }) {
-  const navigate = useNavigate()
-  const [value, setValue] = useState('')
-
-  function submit(event) {
-    event.preventDefault()
-    const q = value.trim()
-    if (!q) return
-    navigate(`/cari?q=${encodeURIComponent(q)}`)
-    onDone?.()
-  }
-
-  return (
-    <form onSubmit={submit} role="search" className="relative w-full">
-      <label htmlFor="site-search" className="sr-only">Cari artikel</label>
-      <Search aria-hidden="true" size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary" />
-      <input
-        id="site-search"
-        type="search"
-        autoFocus
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        placeholder="Cari judul atau isi artikel, lalu Enter"
-        className="focus-ring min-h-12 w-full rounded-full border border-border bg-bg-secondary pl-11 pr-4 text-base text-text-primary placeholder:text-text-tertiary"
-      />
-    </form>
   )
 }
 
@@ -149,7 +133,7 @@ export default function SiteHeader() {
 
       {searching && (
         <div className="mx-auto max-w-3xl px-4 pb-4 sm:px-6">
-          <SearchBox onDone={() => setSearching(false)} />
+          <SearchCombobox autoFocus onDone={() => setSearching(false)} />
         </div>
       )}
 

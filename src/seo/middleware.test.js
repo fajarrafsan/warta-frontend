@@ -47,6 +47,22 @@ it('crawler mendapat HTML berisi metadata artikel', async () => {
   expect(html).not.toContain('bawaan')
 })
 
+it('crawler mendapat metadata profil penulis', async () => {
+  vi.stubGlobal('fetch', vi.fn(async (url) => {
+    const target = String(url)
+    if (target === 'https://api.warta.id/api/v1/authors/7') {
+      return Response.json({ data: { id: 7, name: 'Dimas Pratama', bio: 'Menulis soal backend.', avatar_url: '/uploads/d.png' } })
+    }
+    return new Response(INDEX)
+  }))
+
+  const html = await (await middleware(request('/penulis/7', WHATSAPP))).text()
+  expect(html).toContain('<title>Dimas Pratama | Warta</title>')
+  expect(html).toContain('<meta property="og:type" content="profile" />')
+  expect(html).toContain('<meta property="og:image" content="https://api.warta.id/uploads/d.png" />')
+  expect(html).toContain('<meta name="description" content="Menulis soal backend." />')
+})
+
 it('artikel yang tidak ada atau backend mati tetap ke SPA', async () => {
   vi.stubGlobal('fetch', vi.fn(async (url) => (String(url).includes('/api/') ? new Response('{}', { status: 404 }) : new Response(INDEX))))
   expect(passesThrough(await middleware(request('/artikel/tidak-ada', WHATSAPP)))).toBe(true)

@@ -1,5 +1,6 @@
 export const ARTICLE_STATUS = {
   PUBLISHED: 'published',
+  SCHEDULED: 'scheduled',
   DRAFT: 'draft',
   ARCHIVED: 'archived',
 }
@@ -8,6 +9,7 @@ export const ARTICLE_STATUS = {
 // publik tanpa dihapus, dan bisa dipulihkan.
 export const STATUS_TABS = [
   { key: ARTICLE_STATUS.PUBLISHED, label: 'Published', shortLabel: 'Publish' },
+  { key: ARTICLE_STATUS.SCHEDULED, label: 'Scheduled', shortLabel: 'Jadwal' },
   { key: ARTICLE_STATUS.DRAFT, label: 'Drafts', shortLabel: 'Draft' },
   { key: ARTICLE_STATUS.ARCHIVED, label: 'Trashed', shortLabel: 'Trash' },
 ]
@@ -67,3 +69,21 @@ export const REPORT_REASONS = [
   { value: 'abusive', label: 'Kasar atau menyerang' },
   { value: 'other', label: 'Alasan lain' },
 ]
+
+const pad = (value) => String(value).padStart(2, '0')
+
+// toLocalInput mengubah waktu ISO menjadi nilai input datetime-local dalam
+// zona waktu perangkat, misalnya 2026-10-05T09:30.
+export function toLocalInput(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+// fromLocalInput mengubah nilai datetime-local (waktu perangkat) menjadi ISO UTC.
+export function fromLocalInput(value) {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}

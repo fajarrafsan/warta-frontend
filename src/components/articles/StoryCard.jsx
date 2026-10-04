@@ -1,11 +1,17 @@
 import { Link } from 'react-router-dom'
 import { formatArticleDate, readingLabel } from '../../utils/articleUtils.js'
 import Cover from './Cover.jsx'
+import Highlight from './Highlight.jsx'
 
 function Meta({ article }) {
   return (
     <p className="text-xs text-text-tertiary">
-      <span className="font-medium text-text-secondary">{article.author.name}</span>
+      <Link
+        to={`/penulis/${article.author.id}`}
+        className="focus-ring relative z-10 rounded font-medium text-text-secondary hover:text-text-primary hover:underline"
+      >
+        {article.author.name}
+      </Link>
       <span aria-hidden="true"> · </span>
       <time dateTime={article.published_at}>{formatArticleDate(article.published_at)}</time>
       <span aria-hidden="true"> · </span>
@@ -26,9 +32,12 @@ function Kicker({ article }) {
 }
 
 // StoryCard punya tiga bentuk: lead (utama di beranda), row (daftar ringkas
-// dengan gambar kecil), dan grid (kartu biasa).
-export default function StoryCard({ article, variant = 'grid' }) {
+// dengan gambar kecil), dan grid (kartu biasa). highlight adalah kata yang
+// dicari: judul dan cuplikan hasil pencarian disorot.
+export default function StoryCard({ article, variant = 'grid', highlight }) {
   const href = `/artikel/${article.slug}`
+  const title = <Highlight text={article.title} terms={highlight} />
+  const summary = <Highlight text={(highlight?.length && article.snippet) || article.excerpt} terms={highlight} />
 
   if (variant === 'lead') {
     return (
@@ -39,9 +48,9 @@ export default function StoryCard({ article, variant = 'grid' }) {
         <div className="mt-6 max-w-3xl">
           <Kicker article={article} />
           <h2 className="balanced-text mt-3 font-display text-4xl font-semibold leading-[1.05] tracking-[-0.025em] text-text-primary sm:text-5xl">
-            <Link to={href} className="focus-ring rounded after:absolute after:inset-0">{article.title}</Link>
+            <Link to={href} className="focus-ring rounded after:absolute after:inset-0">{title}</Link>
           </h2>
-          <p className="mt-4 text-lg leading-8 text-text-secondary">{article.excerpt}</p>
+          <p className="mt-4 text-lg leading-8 text-text-secondary">{summary}</p>
           <div className="mt-4"><Meta article={article} /></div>
         </div>
       </article>
@@ -54,7 +63,7 @@ export default function StoryCard({ article, variant = 'grid' }) {
         <div className="min-w-0 flex-1">
           <Kicker article={article} />
           <h3 className="mt-1.5 font-display text-xl font-semibold leading-snug text-text-primary group-hover:text-accent-strong">
-            <Link to={href} className="focus-ring rounded after:absolute after:inset-0">{article.title}</Link>
+            <Link to={href} className="focus-ring rounded after:absolute after:inset-0">{title}</Link>
           </h3>
           <div className="mt-2"><Meta article={article} /></div>
         </div>
@@ -73,9 +82,9 @@ export default function StoryCard({ article, variant = 'grid' }) {
       <div className="mt-4">
         <Kicker article={article} />
         <h3 className="balanced-text mt-2 font-display text-2xl font-semibold leading-tight text-text-primary group-hover:text-accent-strong">
-          <Link to={href} className="focus-ring rounded after:absolute after:inset-0">{article.title}</Link>
+          <Link to={href} className="focus-ring rounded after:absolute after:inset-0">{title}</Link>
         </h3>
-        <p className="mt-2 line-clamp-3 leading-7 text-text-secondary">{article.excerpt}</p>
+        <p className="mt-2 line-clamp-3 leading-7 text-text-secondary">{summary}</p>
         <div className="mt-3"><Meta article={article} /></div>
       </div>
     </article>

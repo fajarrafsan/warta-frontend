@@ -84,4 +84,17 @@ describe('articleApi', () => {
       status: 'archived',
     })
   })
+
+  it('payload artikel terjadwal membawa waktu terbitnya', () => {
+    const article = {
+      title: 'Judul artikel terjadwal yang lengkap',
+      content: 'Isi',
+      category: { id: 1 },
+      tags: [],
+      status: 'scheduled',
+      scheduled_at: '2026-12-01T02:00:00Z',
+    }
+    expect(toArticlePayload(article).scheduled_at).toBe('2026-12-01T02:00:00Z')
+    expect(toArticlePayload(article, 'draft')).not.toHaveProperty('scheduled_at')
+  })
 })

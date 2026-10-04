@@ -44,6 +44,17 @@ export function articleMeta(article, assetBase) {
   }
 }
 
+// authorMeta menyusun metadata dari response GET /api/v1/authors/{id}.
+export function authorMeta(author, assetBase) {
+  return {
+    title: author.name,
+    description: clip(author.bio || `Tulisan ${author.name} di Warta.`, 200),
+    image: absoluteUrl(author.avatar_url, assetBase),
+    type: 'profile',
+    path: `/penulis/${encodeURIComponent(author.id)}`,
+  }
+}
+
 // headTags mengubah metadata menjadi daftar tag untuk <head>. origin adalah
 // alamat frontend, dasar URL kanonis.
 export function headTags(meta, origin) {

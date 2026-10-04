@@ -4,6 +4,8 @@ import { Link, useParams } from 'react-router-dom'
 import { recordView } from '../api/articleApi.js'
 import { assetUrl } from '../api/client.js'
 import ArticleActions from '../components/articles/ArticleActions.jsx'
+import AuthorBox from '../components/authors/AuthorBox.jsx'
+import Avatar from '../components/ui/Avatar.jsx'
 import CommentsSection from '../components/articles/CommentsSection.jsx'
 import Cover from '../components/articles/Cover.jsx'
 import Markdown from '../components/articles/Markdown.jsx'
@@ -97,12 +99,10 @@ export default function ArticlePage() {
           {article.title}
         </h1>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-text-tertiary">
-          <span className="flex items-center gap-2 font-medium text-text-secondary">
-            <span aria-hidden="true" className="grid size-8 place-items-center rounded-full bg-brand text-xs font-bold uppercase text-brand-contrast">
-              {article.author.name.charAt(0)}
-            </span>
+          <Link to={`/penulis/${article.author.id}`} className="focus-ring flex items-center gap-2 rounded-full font-medium text-text-secondary hover:text-text-primary">
+            <Avatar name={article.author.name} src={article.author.avatar_url} size="sm" />
             {article.author.name}
-          </span>
+          </Link>
           <time dateTime={article.published_at || article.created_at}>
             {formatArticleDate(article.published_at || article.created_at, { month: 'long' })}
           </time>
@@ -143,6 +143,8 @@ export default function ArticlePage() {
         <div className="mt-8 border-y border-border py-5">
           <ArticleActions key={article.id} article={article} />
         </div>
+
+        {published && <AuthorBox authorId={article.author.id} />}
 
         <div id="komentar">
           <CommentsSection article={article} />

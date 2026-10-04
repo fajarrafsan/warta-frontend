@@ -81,3 +81,23 @@ export async function forgotPassword(email) {
 export async function resetPassword(token, newPassword) {
   return call(() => authClient.post('/api/v1/auth/reset-password', { token, new_password: newPassword }))
 }
+
+// updateProfile mengubah nama, bio, atau foto (hanya field yang dikirim) lalu
+// memperbarui data akun di sesi.
+export async function updateProfile(changes) {
+  return call(async () => {
+    const response = await api.patch('/api/v1/me', changes)
+    const user = response.data.data
+    const session = getSession()
+    if (session) setSession({ ...session, user })
+    return user
+  })
+}
+
+// changePassword mencabut semua sesi di backend, termasuk sesi ini.
+export async function changePassword(currentPassword, newPassword) {
+  return call(() => api.put('/api/v1/me/password', {
+    current_password: currentPassword,
+    new_password: newPassword,
+  }))
+}

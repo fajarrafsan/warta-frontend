@@ -43,9 +43,12 @@ export async function replaceArticle(id, payload) {
   })
 }
 
-export async function changeArticleStatus(id, status) {
+// changeArticleStatus mengubah status saja. Status scheduled butuh
+// scheduledAt, misalnya saat membatalkan pemindahan artikel terjadwal ke trash.
+export async function changeArticleStatus(id, status, scheduledAt) {
   return call(async () => {
-    const response = await api.patch(`/api/v1/articles/${id}`, { status })
+    const body = status === 'scheduled' ? { status, scheduled_at: scheduledAt } : { status }
+    const response = await api.patch(`/api/v1/articles/${id}`, body)
     return response.data.data
   })
 }
@@ -115,6 +118,28 @@ export async function getStats(days = 30) {
   })
 }
 
+export async function listRevisions(id) {
+  return call(async () => {
+    const response = await api.get(`/api/v1/articles/${id}/revisions`)
+    return response.data.data
+  })
+}
+
+export async function getRevision(id, revisionId) {
+  return call(async () => {
+    const response = await api.get(`/api/v1/articles/${id}/revisions/${revisionId}`)
+    return response.data.data
+  })
+}
+
+// restoreRevision mengembalikan artikel ke isi revisi itu; statusnya tetap.
+export async function restoreRevision(id, revisionId) {
+  return call(async () => {
+    const response = await api.post(`/api/v1/articles/${id}/revisions/${revisionId}/restore`)
+    return response.data.data
+  })
+}
+
 // toArticlePayload membentuk body PUT dari artikel hasil response.
 export function toArticlePayload(article, status = article.status) {
   return {
@@ -124,5 +149,7 @@ export function toArticlePayload(article, status = article.status) {
     tags: article.tags.map((tag) => tag.name),
     cover_image: article.cover_image || '',
     status,
+    // Jadwal yang tersimpan tetap dipakai selama status masih scheduled.
+    ...(status === 'scheduled' && { scheduled_at: article.scheduled_at }),
   }
 }

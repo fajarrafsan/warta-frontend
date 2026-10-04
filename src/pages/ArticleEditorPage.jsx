@@ -1,8 +1,11 @@
-import { ArrowLeft } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowLeft, History } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { createArticle, replaceArticle } from '../api/articleApi.js'
 import ArticleForm from '../components/articles/ArticleForm.jsx'
+import RevisionsDialog from '../components/studio/RevisionsDialog.jsx'
+import Button from '../components/ui/Button.jsx'
 import ErrorState from '../components/ui/ErrorState.jsx'
 import PageHeader from '../components/ui/PageHeader.jsx'
 import useArticle from '../hooks/useArticle.js'
@@ -28,19 +31,27 @@ export default function ArticleEditorPage() {
   const isEditing = Boolean(id)
   const { article, loading, error, refresh } = useArticle(id)
   const categories = useCategories()
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   useDocumentTitle(isEditing ? 'Edit artikel' : 'Tulis artikel')
 
   async function saveArticle(payload) {
-    const published = payload.status === 'published'
+    const messages = isEditing ? {
+      published: 'Artikel diperbarui dan dipublish.',
+      scheduled: 'Artikel dijadwalkan terbit.',
+      draft: 'Perubahan disimpan sebagai draft.',
+    } : {
+      published: 'Artikel berhasil dipublish.',
+      scheduled: 'Artikel dijadwalkan terbit.',
+      draft: 'Artikel disimpan sebagai draft.',
+    }
 
     if (isEditing) {
       await replaceArticle(id, payload)
-      toast.success(published ? 'Artikel diperbarui dan dipublish.' : 'Perubahan disimpan sebagai draft.')
     } else {
       await createArticle(payload)
-      toast.success(published ? 'Artikel berhasil dipublish.' : 'Artikel disimpan sebagai draft.')
     }
+    toast.success(messages[payload.status])
 
     navigate(`/studio/artikel?status=${payload.status}`)
   }
@@ -62,9 +73,26 @@ export default function ArticleEditorPage() {
         eyebrow={isEditing ? `Artikel #${id}` : 'Artikel baru'}
         title={isEditing ? 'Edit artikel' : 'Tulis artikel'}
         description={isEditing
-          ? 'Perbarui isi artikel lalu pilih Publish atau simpan kembali sebagai Draft.'
+          ? 'Perbarui isi artikel lalu pilih Publish, Jadwalkan, atau simpan kembali sebagai Draft.'
           : 'Tulis artikel baru dan tentukan kapan artikel siap ditampilkan.'}
-      />
+      >
+        {isEditing && article && (
+          <Button variant="secondary" onClick={() => setHistoryOpen(true)}>
+            <History aria-hidden="true" size={18} />
+            Riwayat
+          </Button>
+        )}
+      </PageHeader>
+
+      {isEditing && article && (
+        <RevisionsDialog
+          articleId={article.id}
+          current={article}
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+          onRestored={refresh}
+        />
+      )}
 
       {pageLoading ? (
         <EditorSkeleton />
@@ -78,7 +106,8 @@ export default function ArticleEditorPage() {
         />
       ) : (
         <ArticleForm
-          key={article?.id || 'new'}
+          // Isian dimuat ulang setelah artikel dipulihkan dari riwayat.
+          key={article ? `${article.id}-${article.updated_at}` : 'new'}
           categories={categories.categories}
           initialValues={article ? {
             title: article.title,
@@ -88,6 +117,7 @@ export default function ArticleEditorPage() {
             cover_image: article.cover_image || '',
           } : undefined}
           currentStatus={article?.status}
+          scheduledAt={article?.scheduled_at}
           onSubmit={saveArticle}
         />
       )}

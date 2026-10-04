@@ -1,8 +1,15 @@
 import { useMemo, useState } from 'react'
-import { FileCheck2, FileClock, Save } from 'lucide-react'
+import { CalendarClock, FileCheck2, FileClock, Save } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ApiError } from '../../api/errors.js'
-import { estimateReadingMinutes, parseTags, readingLabel } from '../../utils/articleUtils.js'
+import {
+  estimateReadingMinutes,
+  formatArticleDate,
+  fromLocalInput,
+  parseTags,
+  readingLabel,
+  toLocalInput,
+} from '../../utils/articleUtils.js'
 import CoverField from '../studio/CoverField.jsx'
 import MarkdownEditor from '../studio/MarkdownEditor.jsx'
 import Button from '../ui/Button.jsx'
@@ -45,6 +52,21 @@ function validateField(name, value) {
   return ''
 }
 
+// validateSchedule memeriksa waktu terbit terjadwal: wajib dan di masa depan.
+function validateSchedule(value) {
+  const iso = fromLocalInput(value)
+  if (!iso) return 'Pilih waktu terbit.'
+  if (new Date(iso) <= new Date()) return 'Waktu terbit harus di masa depan.'
+  return ''
+}
+
+const STATUS_NAMES = {
+  draft: 'Draft',
+  scheduled: 'Terjadwal',
+  published: 'Terbit',
+  archived: 'Di trash',
+}
+
 function validateForm(values) {
   return Object.keys(values).reduce((result, field) => {
     const message = validateField(field, values[field])
@@ -65,11 +87,13 @@ function FieldError({ id, message }) {
 
 const inputClass = 'focus-ring mt-2 min-h-12 w-full rounded-xl border border-border bg-bg-primary px-4 text-base text-text-primary placeholder:text-text-tertiary hover:border-text-tertiary'
 
-export default function ArticleForm({ categories = [], initialValues, currentStatus, onSubmit }) {
+export default function ArticleForm({ categories = [], initialValues, currentStatus, scheduledAt, onSubmit }) {
   const [values, setValues] = useState(() => ({
     ...EMPTY_VALUES,
     ...initialValues,
   }))
+  const [scheduling, setScheduling] = useState(currentStatus === 'scheduled')
+  const [scheduleAt, setScheduleAt] = useState(() => toLocalInput(scheduledAt))
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [submittingStatus, setSubmittingStatus] = useState('')
@@ -107,6 +131,10 @@ export default function ArticleForm({ categories = [], initialValues, currentSta
 
   async function handleSubmit(status) {
     const validationErrors = validateForm(values)
+    if (status === 'scheduled') {
+      const message = validateSchedule(scheduleAt)
+      if (message) validationErrors.scheduled_at = message
+    }
     setErrors(validationErrors)
     setFormError('')
 
@@ -126,6 +154,7 @@ export default function ArticleForm({ categories = [], initialValues, currentSta
         tags: parseTags(values.tags),
         cover_image: values.cover_image,
         status,
+        ...(status === 'scheduled' && { scheduled_at: fromLocalInput(scheduleAt) }),
       })
     } catch (error) {
       if (error instanceof ApiError) {
@@ -212,7 +241,10 @@ export default function ArticleForm({ categories = [], initialValues, currentSta
             <div>
               <h2 className="font-semibold text-text-primary">Terbitkan</h2>
               <p className="text-xs text-text-tertiary">
-                {currentStatus ? `Status saat ini: ${currentStatus}` : 'Artikel baru'}
+                {!currentStatus ? 'Artikel baru'
+                  : currentStatus === 'scheduled' && scheduledAt
+                    ? `Terjadwal ${formatArticleDate(scheduledAt, { month: 'long', hour: '2-digit', minute: '2-digit' })}`
+                    : `Status saat ini: ${STATUS_NAMES[currentStatus] || currentStatus}`}
               </p>
             </div>
           </div>
@@ -228,18 +260,70 @@ export default function ArticleForm({ categories = [], initialValues, currentSta
             ))}
           </ul>
 
+          <div className="mt-5 rounded-xl border border-border p-3">
+            <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-text-primary">
+              <input
+                type="checkbox"
+                checked={scheduling}
+                onChange={(event) => {
+                  setScheduling(event.target.checked)
+                  setErrors((current) => ({ ...current, scheduled_at: '' }))
+                }}
+                className="size-4 cursor-pointer accent-current"
+              />
+              Jadwalkan terbit
+            </label>
+            {scheduling && (
+              <div className="mt-3">
+                <label htmlFor="scheduled_at" className="text-xs font-semibold text-text-secondary">Waktu terbit</label>
+                <input
+                  id="scheduled_at"
+                  type="datetime-local"
+                  value={scheduleAt}
+                  min={toLocalInput(new Date())}
+                  onChange={(event) => {
+                    setScheduleAt(event.target.value)
+                    if (errors.scheduled_at) setErrors((current) => ({ ...current, scheduled_at: validateSchedule(event.target.value) }))
+                  }}
+                  className={`${inputClass} min-h-11 text-sm`}
+                  aria-invalid={Boolean(errors.scheduled_at)}
+                  aria-describedby="scheduled_at-help scheduled_at-error"
+                />
+                <p id="scheduled_at-help" className="mt-2 text-xs leading-5 text-text-tertiary">
+                  Menurut jam perangkatmu. Artikel terbit otomatis paling lambat satu menit setelahnya
+                  {currentStatus === 'published' && ', dan disembunyikan sampai saat itu'}.
+                </p>
+                <FieldError id="scheduled_at-error" message={errors.scheduled_at} />
+              </div>
+            )}
+          </div>
+
           <div className="mt-5 grid gap-3">
-            <Button
-              type="button"
-              variant="primary"
-              loading={submittingStatus === 'published'}
-              disabled={isSubmitting}
-              onClick={() => handleSubmit('published')}
-              className="w-full"
-            >
-              <FileCheck2 aria-hidden="true" size={18} />
-              Publish
-            </Button>
+            {scheduling ? (
+              <Button
+                type="button"
+                variant="primary"
+                loading={submittingStatus === 'scheduled'}
+                disabled={isSubmitting}
+                onClick={() => handleSubmit('scheduled')}
+                className="w-full"
+              >
+                <CalendarClock aria-hidden="true" size={18} />
+                Jadwalkan
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="primary"
+                loading={submittingStatus === 'published'}
+                disabled={isSubmitting}
+                onClick={() => handleSubmit('published')}
+                className="w-full"
+              >
+                <FileCheck2 aria-hidden="true" size={18} />
+                Publish
+              </Button>
+            )}
             <Button
               type="button"
               variant="secondary"
